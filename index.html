@@ -354,18 +354,29 @@
   }
   .passage-list{ display:flex; flex-direction:column; gap:8px; }
   .passage-item{
-    display:flex; align-items:center; justify-content:space-between;
     background:var(--card); border:1px solid var(--line); border-radius:6px;
-    padding:11px 16px; text-decoration:none; color:var(--ink);
-    transition: border-color .15s, transform .1s;
+    transition: border-color .15s; overflow:hidden;
   }
-  .passage-item.enabled:hover{ border-color:var(--ochre); transform:translateX(2px); }
+  .passage-item.enabled:hover{ border-color:var(--ochre); }
+  .passage-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:11px 16px; color:var(--ink); cursor:pointer;
+  }
   .passage-item .p-name{ font-size:14px; font-weight:500; }
   .passage-item .p-arrow{ font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--ochre); }
-  .passage-item.locked{
-    opacity:.55; cursor:not-allowed; pointer-events:none;
-  }
+  .passage-item.locked{ opacity:.55; }
+  .passage-item.locked .passage-row{ cursor:not-allowed; pointer-events:none; }
   .passage-item.locked .p-arrow{ color:#9A947A; }
+  .passage-info{
+    max-height:0; overflow:hidden; transition:max-height .22s ease;
+    font-size:12.5px; color:var(--ink-soft);
+  }
+  .passage-info.open{
+    max-height:80px; padding:0 16px 12px 16px; border-top:1px solid var(--line); padding-top:10px;
+  }
+  .passage-info-loading{ font-style:italic; }
+  .passage-info-count{ font-family:'IBM Plex Mono', monospace; font-weight:600; color:var(--moss-deep); }
+  .passage-info-last{ margin-left:6px; }
   .badge{
     font-family:'IBM Plex Mono', monospace; font-size:9.5px; letter-spacing:.06em;
     padding:2px 7px; border-radius:20px; margin-left:8px; vertical-align:middle;
@@ -514,6 +525,31 @@
     const attemptNo = history.length || 1;
     renderAttemptHistoryPanel(containerId, history);
     diagnoseAndShow(setId, containerId, score, total, attemptNo);
+  }
+
+  async function togglePassageInfo(rowEl){
+    const wrap = rowEl.closest('.passage-item');
+    if(!wrap) return;
+    const info = wrap.querySelector('.passage-info');
+    const setId = wrap.dataset.setId;
+    if(info.classList.contains('open')){
+      info.classList.remove('open');
+      return;
+    }
+    info.classList.add('open');
+    if(!currentUser){
+      info.innerHTML = '<span class="passage-info-loading">Đăng nhập để xem lịch sử.</span>';
+      return;
+    }
+    info.innerHTML = '<span class="passage-info-loading">Đang tải...</span>';
+    const history = await getAttemptHistory(setId);
+    if(!history.length){
+      info.innerHTML = '<span class="passage-info-count">Chưa làm lần nào</span>';
+    } else {
+      const last = history[history.length - 1];
+      const lastDate = new Date(last.created_at).toLocaleDateString('vi-VN');
+      info.innerHTML = `<span class="passage-info-count">Đã làm ${history.length} lần</span><span class="passage-info-last">— gần nhất: ${last.score}/${last.total} (${lastDate})</span>`;
+    }
   }
 
   // ===== Note-taking capture + AI diagnosis =====
@@ -796,72 +832,108 @@
     <div class="test-block">
       <div class="test-title">Reading Test 1</div>
       <div class="passage-list">
-        <a class="passage-item enabled" href="#" onclick="openModeModal('p-set20-test1-passage1', 'Passage 1 — The kākāpō'); return false;">
-          <span class="p-name">Passage 1 — The kākāpō <span class="badge ready">Sẵn sàng</span></span>
-          <span class="p-arrow">Vào làm →</span>
-        </a>
-        <a class="passage-item enabled" href="#" onclick="openModeModal('p-set20-test1-passage2', 'Passage 2 — Bring elms to Britain'); return false;">
-          <span class="p-name">Passage 2 — Bring elms to Britain <span class="badge ready">Sẵn sàng</span></span>
-          <span class="p-arrow">Vào làm →</span>
-        </a>
-        <a class="passage-item enabled" href="#" onclick="openModeModal('p-set20-test1-passage3', 'Passage 3 — How stress affects our judgement'); return false;">
-          <span class="p-name">Passage 3 — How stress affects our judgement <span class="badge ready">Sẵn sàng</span></span>
-          <span class="p-arrow">Vào làm →</span>
-        </a>
+        <div class="passage-item enabled" data-set-id="p-set20-test1-passage1">
+          <div class="passage-row" onclick="togglePassageInfo(this)">
+            <span class="p-name">Passage 1 — The kākāpō <span class="badge ready">Sẵn sàng</span></span>
+            <span class="p-arrow" onclick="event.stopPropagation(); openModeModal('p-set20-test1-passage1', 'Passage 1 — The kākāpō'); return false;">Vào làm →</span>
+          </div>
+          <div class="passage-info"></div>
+        </div>
+        <div class="passage-item enabled" data-set-id="p-set20-test1-passage2">
+          <div class="passage-row" onclick="togglePassageInfo(this)">
+            <span class="p-name">Passage 2 — Bring elms to Britain <span class="badge ready">Sẵn sàng</span></span>
+            <span class="p-arrow" onclick="event.stopPropagation(); openModeModal('p-set20-test1-passage2', 'Passage 2 — Bring elms to Britain'); return false;">Vào làm →</span>
+          </div>
+          <div class="passage-info"></div>
+        </div>
+        <div class="passage-item enabled" data-set-id="p-set20-test1-passage3">
+          <div class="passage-row" onclick="togglePassageInfo(this)">
+            <span class="p-name">Passage 3 — How stress affects our judgement <span class="badge ready">Sẵn sàng</span></span>
+            <span class="p-arrow" onclick="event.stopPropagation(); openModeModal('p-set20-test1-passage3', 'Passage 3 — How stress affects our judgement'); return false;">Vào làm →</span>
+          </div>
+          <div class="passage-info"></div>
+        </div>
       </div>
     </div>
 
     <div class="test-block">
       <div class="test-title">Reading Test 2</div>
       <div class="passage-list">
-        <a class="passage-item enabled" href="#" onclick="openModeModal('p-set20-test2-passage1', 'Passage 1 — Manatees'); return false;">
-          <span class="p-name">Passage 1 — Manatees <span class="badge ready">Sẵn sàng</span></span>
-          <span class="p-arrow">Vào làm →</span>
-        </a>
-        <a class="passage-item enabled" href="#" onclick="openModeModal('p-set20-test2-passage2', 'Passage 2 — Procrastination'); return false;">
-          <span class="p-name">Passage 2 — Procrastination <span class="badge ready">Sẵn sàng</span></span>
-          <span class="p-arrow">Vào làm →</span>
-        </a>
-        <a class="passage-item enabled" href="#" onclick="openModeModal('p-set20-test2-passage3', 'Passage 3 — Invasion of the Robot Umpires'); return false;">
-          <span class="p-name">Passage 3 — Invasion of the Robot Umpires <span class="badge ready">Sẵn sàng</span></span>
-          <span class="p-arrow">Vào làm →</span>
-        </a>
+        <div class="passage-item enabled" data-set-id="p-set20-test2-passage1">
+          <div class="passage-row" onclick="togglePassageInfo(this)">
+            <span class="p-name">Passage 1 — Manatees <span class="badge ready">Sẵn sàng</span></span>
+            <span class="p-arrow" onclick="event.stopPropagation(); openModeModal('p-set20-test2-passage1', 'Passage 1 — Manatees'); return false;">Vào làm →</span>
+          </div>
+          <div class="passage-info"></div>
+        </div>
+        <div class="passage-item enabled" data-set-id="p-set20-test2-passage2">
+          <div class="passage-row" onclick="togglePassageInfo(this)">
+            <span class="p-name">Passage 2 — Procrastination <span class="badge ready">Sẵn sàng</span></span>
+            <span class="p-arrow" onclick="event.stopPropagation(); openModeModal('p-set20-test2-passage2', 'Passage 2 — Procrastination'); return false;">Vào làm →</span>
+          </div>
+          <div class="passage-info"></div>
+        </div>
+        <div class="passage-item enabled" data-set-id="p-set20-test2-passage3">
+          <div class="passage-row" onclick="togglePassageInfo(this)">
+            <span class="p-name">Passage 3 — Invasion of the Robot Umpires <span class="badge ready">Sẵn sàng</span></span>
+            <span class="p-arrow" onclick="event.stopPropagation(); openModeModal('p-set20-test2-passage3', 'Passage 3 — Invasion of the Robot Umpires'); return false;">Vào làm →</span>
+          </div>
+          <div class="passage-info"></div>
+        </div>
       </div>
     </div>
 
     <div class="test-block">
       <div class="test-title">Reading Test 3</div>
       <div class="passage-list">
-        <a class="passage-item enabled" href="#" onclick="openModeModal('p-set20-test3-passage1', 'Passage 1 — Frozen Food'); return false;">
-          <span class="p-name">Passage 1 — Frozen Food <span class="badge ready">Sẵn sàng</span></span>
-          <span class="p-arrow">Vào làm →</span>
-        </a>
-        <a class="passage-item enabled" href="#" onclick="openModeModal('p-set20-test3-passage2', &quot;Passage 2 — Can the planet's coral reefs be saved?&quot;); return false;">
-          <span class="p-name">Passage 2 — Can the planet's coral reefs be saved? <span class="badge ready">Sẵn sàng</span></span>
-          <span class="p-arrow">Vào làm →</span>
-        </a>
-        <a class="passage-item enabled" href="#" onclick="openModeModal('p-set20-test3-passage3', 'Passage 3 — Robots and us'); return false;">
-          <span class="p-name">Passage 3 — Robots and us <span class="badge ready">Sẵn sàng</span></span>
-          <span class="p-arrow">Vào làm →</span>
-        </a>
+        <div class="passage-item enabled" data-set-id="p-set20-test3-passage1">
+          <div class="passage-row" onclick="togglePassageInfo(this)">
+            <span class="p-name">Passage 1 — Frozen Food <span class="badge ready">Sẵn sàng</span></span>
+            <span class="p-arrow" onclick="event.stopPropagation(); openModeModal('p-set20-test3-passage1', 'Passage 1 — Frozen Food'); return false;">Vào làm →</span>
+          </div>
+          <div class="passage-info"></div>
+        </div>
+        <div class="passage-item enabled" data-set-id="p-set20-test3-passage2">
+          <div class="passage-row" onclick="togglePassageInfo(this)">
+            <span class="p-name">Passage 2 — Can the planet's coral reefs be saved? <span class="badge ready">Sẵn sàng</span></span>
+            <span class="p-arrow" onclick="event.stopPropagation(); openModeModal('p-set20-test3-passage2', &quot;Passage 2 — Can the planet's coral reefs be saved?&quot;); return false;">Vào làm →</span>
+          </div>
+          <div class="passage-info"></div>
+        </div>
+        <div class="passage-item enabled" data-set-id="p-set20-test3-passage3">
+          <div class="passage-row" onclick="togglePassageInfo(this)">
+            <span class="p-name">Passage 3 — Robots and us <span class="badge ready">Sẵn sàng</span></span>
+            <span class="p-arrow" onclick="event.stopPropagation(); openModeModal('p-set20-test3-passage3', 'Passage 3 — Robots and us'); return false;">Vào làm →</span>
+          </div>
+          <div class="passage-info"></div>
+        </div>
       </div>
     </div>
 
     <div class="test-block">
       <div class="test-title">Reading Test 4</div>
       <div class="passage-list">
-        <a class="passage-item enabled" href="#" onclick="openModeModal('p-set20-test4-passage1', &quot;Passage 1 — Georgia O'Keeffe&quot;); return false;">
-          <span class="p-name">Passage 1 — Georgia O'Keeffe <span class="badge ready">Sẵn sàng</span></span>
-          <span class="p-arrow">Vào làm →</span>
-        </a>
-        <a class="passage-item enabled" href="#" onclick="openModeModal('p-set20-test4-passage2', 'Passage 2 — Adapting to the effects of climate change'); return false;">
-          <span class="p-name">Passage 2 — Adapting to the effects of climate change <span class="badge ready">Sẵn sàng</span></span>
-          <span class="p-arrow">Vào làm →</span>
-        </a>
-        <a class="passage-item enabled" href="#" onclick="openModeModal('p-set20-test4-passage3', 'Passage 3 — A new role for livestock guard dogs'); return false;">
-          <span class="p-name">Passage 3 — A new role for livestock guard dogs <span class="badge ready">Sẵn sàng</span></span>
-          <span class="p-arrow">Vào làm →</span>
-        </a>
+        <div class="passage-item enabled" data-set-id="p-set20-test4-passage1">
+          <div class="passage-row" onclick="togglePassageInfo(this)">
+            <span class="p-name">Passage 1 — Georgia O'Keeffe <span class="badge ready">Sẵn sàng</span></span>
+            <span class="p-arrow" onclick="event.stopPropagation(); openModeModal('p-set20-test4-passage1', &quot;Passage 1 — Georgia O'Keeffe&quot;); return false;">Vào làm →</span>
+          </div>
+          <div class="passage-info"></div>
+        </div>
+        <div class="passage-item enabled" data-set-id="p-set20-test4-passage2">
+          <div class="passage-row" onclick="togglePassageInfo(this)">
+            <span class="p-name">Passage 2 — Adapting to the effects of climate change <span class="badge ready">Sẵn sàng</span></span>
+            <span class="p-arrow" onclick="event.stopPropagation(); openModeModal('p-set20-test4-passage2', 'Passage 2 — Adapting to the effects of climate change'); return false;">Vào làm →</span>
+          </div>
+          <div class="passage-info"></div>
+        </div>
+        <div class="passage-item enabled" data-set-id="p-set20-test4-passage3">
+          <div class="passage-row" onclick="togglePassageInfo(this)">
+            <span class="p-name">Passage 3 — A new role for livestock guard dogs <span class="badge ready">Sẵn sàng</span></span>
+            <span class="p-arrow" onclick="event.stopPropagation(); openModeModal('p-set20-test4-passage3', 'Passage 3 — A new role for livestock guard dogs'); return false;">Vào làm →</span>
+          </div>
+          <div class="passage-info"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -875,18 +947,27 @@
     <div class="test-block">
       <div class="test-title">Reading Test 1</div>
       <div class="passage-list">
-        <a class="passage-item enabled" href="#" onclick="openModeModal('p-set19-test1-passage1', 'Passage 1 — How tennis rackets have changed'); return false;">
-          <span class="p-name">Passage 1 — How tennis rackets have changed <span class="badge ready">Sẵn sàng</span></span>
-          <span class="p-arrow">Vào làm →</span>
-        </a>
-        <a class="passage-item enabled" href="#" onclick="openModeModal('p-set19-test1-passage2', 'Passage 2 — The pirates of the ancient Mediterranean'); return false;">
-          <span class="p-name">Passage 2 — The pirates of the ancient Mediterranean <span class="badge ready">Sẵn sàng</span></span>
-          <span class="p-arrow">Vào làm →</span>
-        </a>
-        <a class="passage-item enabled" href="#" onclick="openModeModal('p-set19-test1-passage3', 'Passage 3 — The persistence and peril of misinformation'); return false;">
-          <span class="p-name">Passage 3 — The persistence and peril of misinformation <span class="badge ready">Sẵn sàng</span></span>
-          <span class="p-arrow">Vào làm →</span>
-        </a>
+        <div class="passage-item enabled" data-set-id="p-set19-test1-passage1">
+          <div class="passage-row" onclick="togglePassageInfo(this)">
+            <span class="p-name">Passage 1 — How tennis rackets have changed <span class="badge ready">Sẵn sàng</span></span>
+            <span class="p-arrow" onclick="event.stopPropagation(); openModeModal('p-set19-test1-passage1', 'Passage 1 — How tennis rackets have changed'); return false;">Vào làm →</span>
+          </div>
+          <div class="passage-info"></div>
+        </div>
+        <div class="passage-item enabled" data-set-id="p-set19-test1-passage2">
+          <div class="passage-row" onclick="togglePassageInfo(this)">
+            <span class="p-name">Passage 2 — The pirates of the ancient Mediterranean <span class="badge ready">Sẵn sàng</span></span>
+            <span class="p-arrow" onclick="event.stopPropagation(); openModeModal('p-set19-test1-passage2', 'Passage 2 — The pirates of the ancient Mediterranean'); return false;">Vào làm →</span>
+          </div>
+          <div class="passage-info"></div>
+        </div>
+        <div class="passage-item enabled" data-set-id="p-set19-test1-passage3">
+          <div class="passage-row" onclick="togglePassageInfo(this)">
+            <span class="p-name">Passage 3 — The persistence and peril of misinformation <span class="badge ready">Sẵn sàng</span></span>
+            <span class="p-arrow" onclick="event.stopPropagation(); openModeModal('p-set19-test1-passage3', 'Passage 3 — The persistence and peril of misinformation'); return false;">Vào làm →</span>
+          </div>
+          <div class="passage-info"></div>
+        </div>
       </div>
     </div>
   </div>
