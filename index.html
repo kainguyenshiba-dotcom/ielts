@@ -86,6 +86,20 @@
   .mode-tab.locked{ opacity:.55; cursor:not-allowed; }
   .mode-tab .lock-ic{ font-size:10px; margin-left:3px; }
 
+  /* ---------- EXAM STATUS BAR (timer + answered count) ---------- */
+  .exam-status-bar{
+    display:flex; align-items:center; gap:14px;
+    font-family:'IBM Plex Mono', monospace; font-size:12px; color:#EFE9D3;
+  }
+  .exam-status-item{
+    display:flex; align-items:center; gap:6px;
+    background:rgba(0,0,0,.18); padding:6px 12px; border-radius:6px;
+    white-space:nowrap;
+  }
+  .exam-timer-value{ color:var(--ochre); font-weight:600; letter-spacing:.03em; }
+  .exam-status-count .exam-answered-value{ color:var(--ochre); font-weight:600; }
+  body.mode-explain .exam-status-bar{ display:none; }
+
   .layout{
     display:grid;
     grid-template-columns: 1.32fr 1fr;
@@ -520,6 +534,57 @@
   function clearExamTimer(setId){
     try{ sessionStorage.removeItem('examStart_' + setId); }catch(e){}
   }
+  function formatMMSS(totalSeconds){
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }
+  function isQItemAnswered(item){
+    const checkboxes = item.querySelectorAll('input[type=checkbox]');
+    if(checkboxes.length) return Array.from(checkboxes).some(c => c.checked);
+    const text = item.querySelector('input[type=text]');
+    if(text) return text.value.trim() !== '';
+    const radio = item.querySelector('input[type=radio]:checked');
+    return !!radio;
+  }
+  const EXAM_STATUS_SET_IDS = [
+    'p-set20-test1-passage1','p-set20-test1-passage2','p-set20-test1-passage3',
+    'p-set20-test2-passage1','p-set20-test2-passage2','p-set20-test2-passage3',
+    'p-set20-test3-passage1','p-set20-test3-passage2','p-set20-test3-passage3',
+    'p-set20-test4-passage1','p-set20-test4-passage2','p-set20-test4-passage3',
+    'p-set19-test1-passage1','p-set19-test1-passage2','p-set19-test1-passage3'
+  ];
+  function injectExamStatusBar(setId){
+    const container = document.getElementById(setId);
+    if(!container) return;
+    const modeTabs = container.querySelector('.mode-tabs');
+    if(!modeTabs || container.querySelector('.exam-status-bar')) return;
+    const bar = document.createElement('div');
+    bar.className = 'exam-status-bar';
+    bar.innerHTML =
+      '<span class="exam-status-item">⏱ <span class="exam-timer-value">--:--</span></span>' +
+      '<span class="exam-status-item exam-status-count">Đã trả lời <span class="exam-answered-value">0</span>/<span class="exam-total-value">0</span> câu</span>';
+    modeTabs.insertAdjacentElement('afterend', bar);
+  }
+  function tickExamStatus(){
+    const active = document.querySelector('.page-view.active');
+    if(!active || active.id === 'p-list') return;
+    const setId = active.id;
+    const bar = active.querySelector('.exam-status-bar');
+    if(!bar) return;
+    const items = active.querySelectorAll('.q-item');
+    const answered = Array.from(items).filter(isQItemAnswered).length;
+    bar.querySelector('.exam-answered-value').textContent = answered;
+    bar.querySelector('.exam-total-value').textContent = items.length;
+    let dur = getExamDurationSeconds(setId);
+    if(dur === null){
+      try{
+        const finalRaw = sessionStorage.getItem('examFinal_' + setId);
+        dur = finalRaw ? parseInt(finalRaw, 10) : null;
+      }catch(e){}
+    }
+    bar.querySelector('.exam-timer-value').textContent = (dur === null) ? '--:--' : formatMMSS(dur);
+  }
 
   async function logEvent(eventType, setId, meta){
     if(!currentUser) return;
@@ -587,7 +652,11 @@
   async function handleSubmission(setId, containerId, score, total){
     const durationSeconds = getExamDurationSeconds(setId);
     await logAttempt(setId, score, total, durationSeconds);
+    if(durationSeconds !== null){
+      try{ sessionStorage.setItem('examFinal_' + setId, String(durationSeconds)); }catch(e){}
+    }
     clearExamTimer(setId);
+    if(typeof tickExamStatus === 'function') tickExamStatus();
     const history = await getAttemptHistory(setId);
     const attemptNo = history.length || 1;
     renderAttemptHistoryPanel(containerId, history);
@@ -5783,6 +5852,7 @@ function showPage(id){
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
   if(id.startsWith('p-set')) logEvent('set_opened', id);
+  if(typeof tickExamStatus === 'function') tickExamStatus();
 }
 
 let pendingPassageId = null;
@@ -5873,6 +5943,7 @@ function chooseMode(mode){
   if(mode === 'exam'){
     startExamTimer(pendingPassageId);
     setMode('exam');
+    if(typeof tickExamStatus === 'function') tickExamStatus();
   } else {
     // chosen directly from the list — unlock explanation view without requiring a finished attempt
     completed = true;
@@ -5933,6 +6004,11 @@ function toggleExplain(btn){
   exp.classList.toggle('show');
   btn.textContent = exp.classList.contains('show') ? 'Ẩn giải thích' : 'Vì sao?';
 }
+
+// ===== Khởi tạo thanh trạng thái (đồng hồ + đếm câu đã trả lời) =====
+EXAM_STATUS_SET_IDS.forEach(injectExamStatusBar);
+tickExamStatus();
+setInterval(tickExamStatus, 1000);
 
 // click a question -> jump to & flash its paragraph, auto-open the margin note
 // (only meaningful in explain mode — selecting an answer must never trigger this)
