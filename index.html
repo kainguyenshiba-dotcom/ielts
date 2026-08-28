@@ -377,6 +377,47 @@
   .passage-info-loading{ font-style:italic; }
   .passage-info-count{ font-family:'IBM Plex Mono', monospace; font-weight:600; color:var(--moss-deep); }
   .passage-info-last{ margin-left:6px; }
+
+  .attempt-history-right{ display:flex; align-items:center; gap:14px; }
+  .attempt-review-link{
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ochre);
+    text-decoration:none;
+  }
+  .attempt-review-link:hover{ text-decoration:underline; }
+
+  /* ---------- REVIEW MODAL ---------- */
+  .review-modal-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:12px;
+    width:680px; max-width:92vw; max-height:82vh; overflow-y:auto;
+    padding:26px 28px 24px 28px;
+    transform:translateY(8px); transition:transform .18s ease;
+    box-shadow:0 18px 40px rgba(20,26,20,.25);
+  }
+  .modal-overlay.open .review-modal-card{ transform:translateY(0); }
+  .review-modal-header{
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;
+  }
+  .review-modal-title{ font-family:'Fraunces', serif; font-weight:600; font-size:19px; color:var(--moss-deep); margin:0; }
+  .review-modal-close{
+    background:none; border:none; font-size:20px; color:var(--ink-soft); cursor:pointer; line-height:1;
+  }
+  .review-summary{
+    background:var(--card); border:1px solid var(--line); border-radius:8px;
+    padding:12px 14px; margin-bottom:16px; font-size:13px; line-height:1.5;
+  }
+  .review-summary h4{ margin:0 0 6px 0; font-family:'Fraunces', serif; font-size:14.5px; color:var(--moss-deep); }
+  .review-q-block{
+    border-top:1px solid var(--line); padding:12px 0; font-size:13px; line-height:1.5;
+  }
+  .review-q-block:first-child{ border-top:none; }
+  .review-q-text{ margin-bottom:6px; }
+  .review-q-note{ color:var(--ink-soft); margin-bottom:3px; }
+  .review-q-note span{ font-weight:600; color:var(--ink); }
+  .review-q-error{
+    margin-top:6px; padding:6px 10px; background:#F6E9DC; border-radius:6px;
+    color:#8A4A20; font-size:12.5px;
+  }
+  .review-loading{ font-style:italic; color:var(--ink-soft); }
   .badge{
     font-family:'IBM Plex Mono', monospace; font-size:9.5px; letter-spacing:.06em;
     padding:2px 7px; border-radius:20px; margin-left:8px; vertical-align:middle;
@@ -511,7 +552,13 @@
     const rows = history.map((a, i) => {
       const d = new Date(a.created_at);
       const dateStr = d.toLocaleString('vi-VN');
-      return `<div class="attempt-history-row"><span>Lần ${i+1} — ${dateStr}</span><span>${a.score}/${a.total}</span></div>`;
+      return `<div class="attempt-history-row">
+        <span>Lần ${i+1} — ${dateStr}</span>
+        <span class="attempt-history-right">
+          <span>${a.score}/${a.total}</span>
+          <a href="#" class="attempt-review-link" onclick="openReviewModal('${containerId}', ${i+1}); return false;">Xem lại bài làm →</a>
+        </span>
+      </div>`;
     }).join('');
     panel.innerHTML = `
       <h4>📅 Lịch sử làm bài (${history.length} lần)</h4>
@@ -688,10 +735,35 @@
     }
   }
 
+  async function saveStudentNotes(setId, attemptNo, collected){
+    if(!currentUser) return;
+    try{
+      const rows = [];
+      (collected.paragraphs || []).forEach(p=>{
+        if(!p.student_main_idea && !p.student_supporting_note) return;
+        rows.push({
+          student_id: currentUser.id, set_id: setId, attempt_no: attemptNo,
+          item_type: 'paragraph', item_id: p.para_id,
+          note_summary: p.student_main_idea || '', note_detail: p.student_supporting_note || ''
+        });
+      });
+      (collected.questions || []).forEach(q=>{
+        rows.push({
+          student_id: currentUser.id, set_id: setId, attempt_no: attemptNo,
+          item_type: 'question', item_id: q.q_id,
+          note_summary: q.student_question_paraphrase || '', note_detail: q.student_reasoning || ''
+        });
+      });
+      if(rows.length) await sb.from('student_notes').insert(rows);
+    }catch(e){ console.warn('saveStudentNotes failed', e); }
+  }
+
   async function diagnoseAndShow(setId, containerId, score, total, attemptNo){
     const collected = collectNotesForContainer(containerId);
     if(!collected || collected.incomplete) return;
     if(!currentUser){ return; }
+
+    await saveStudentNotes(setId, attemptNo || 1, collected);
 
     renderAiDiagnosisPanel(containerId, 'loading');
     try{
@@ -807,6 +879,16 @@
       </div>
     </div>
     <button class="modal-cancel" onclick="closeModal()">Hủy</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="reviewModal">
+  <div class="review-modal-card">
+    <div class="review-modal-header">
+      <h3 class="review-modal-title" id="reviewModalTitle">Xem lại bài làm</h3>
+      <button class="review-modal-close" onclick="closeReviewModal()">✕</button>
+    </div>
+    <div id="reviewModalBody"><div class="review-loading">Đang tải...</div></div>
   </div>
 </div>
 
@@ -5694,6 +5776,75 @@ function openModeModal(passageId, label){
 function closeModal(){
   document.getElementById('modeModal').classList.remove('open');
   pendingPassageId = null;
+}
+
+async function openReviewModal(setId, attemptNo){
+  const overlay = document.getElementById('reviewModal');
+  const body = document.getElementById('reviewModalBody');
+  const title = document.getElementById('reviewModalTitle');
+  title.textContent = `Xem lại bài làm — lần ${attemptNo}`;
+  body.innerHTML = '<div class="review-loading">Đang tải...</div>';
+  overlay.classList.add('open');
+
+  if(!currentUser){
+    body.innerHTML = '<p>Bạn cần đăng nhập để xem lại bài làm.</p>';
+    return;
+  }
+
+  try{
+    const [notesRes, diagRes] = await Promise.all([
+      sb.from('student_notes').select('*')
+        .eq('student_id', currentUser.id).eq('set_id', setId).eq('attempt_no', attemptNo),
+      sb.from('ai_diagnoses').select('*')
+        .eq('student_id', currentUser.id).eq('set_id', setId).eq('attempt_no', attemptNo)
+        .order('created_at', { ascending: false }).limit(1).maybeSingle()
+    ]);
+
+    const notes = notesRes.data || [];
+    const diag = diagRes.data || null;
+
+    const perQErrors = {};
+    if(diag && diag.diagnosis_full && Array.isArray(diag.diagnosis_full.per_question)){
+      diag.diagnosis_full.per_question.forEach(pq => { perQErrors[pq.q_id] = pq; });
+    }
+
+    const container = document.getElementById(setId);
+
+    let html = '';
+    if(diag){
+      html += `<div class="review-summary"><h4>🤖 Nhận xét AI</h4><p>${(diag.summary_short || '').replace(/</g,'&lt;')}</p></div>`;
+    }
+
+    const qNotes = notes.filter(n => n.item_type === 'question')
+      .sort((a,b) => (parseInt((a.item_id||'').replace(/\D/g,''))||0) - (parseInt((b.item_id||'').replace(/\D/g,''))||0));
+
+    if(!qNotes.length){
+      html += '<p>Không tìm thấy note nào cho lần làm này (có thể lần này được thực hiện trước khi tính năng lưu note được bật).</p>';
+    } else {
+      qNotes.forEach(n => {
+        const qEl = container ? container.querySelector('#' + n.item_id) : null;
+        const qText = qEl ? ((qEl.querySelector('.q-text')||{}).textContent || '') : '';
+        const qNum = n.item_id.replace(/\D/g,'');
+        const err = perQErrors[n.item_id];
+        html += `
+          <div class="review-q-block">
+            <div class="review-q-text"><b>Câu ${qNum}:</b> ${qText.replace(/</g,'&lt;')}</div>
+            <div class="review-q-note"><span>Tóm ý câu hỏi:</span> ${(n.note_summary||'—').replace(/</g,'&lt;')}</div>
+            <div class="review-q-note"><span>Lý do chọn:</span> ${(n.note_detail||'—').replace(/</g,'&lt;')}</div>
+            ${err ? `<div class="review-q-error">⚠️ ${ERROR_LABELS_VI[err.error_type] || err.error_type}${err.explanation ? ': ' + err.explanation.replace(/</g,'&lt;') : ''}</div>` : ''}
+          </div>`;
+      });
+    }
+
+    body.innerHTML = html;
+  }catch(e){
+    console.warn('openReviewModal failed', e);
+    body.innerHTML = '<p>Có lỗi khi tải lại bài làm. Thử lại sau nhé.</p>';
+  }
+}
+
+function closeReviewModal(){
+  document.getElementById('reviewModal').classList.remove('open');
 }
 
 function chooseMode(mode){
