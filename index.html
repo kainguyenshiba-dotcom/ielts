@@ -503,6 +503,24 @@
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   let currentUser = null;
 
+  // ===== Đếm thời gian làm bài (bắt đầu khi chọn "Làm bài" từ modal) =====
+  function startExamTimer(setId){
+    if(!setId) return;
+    try{ sessionStorage.setItem('examStart_' + setId, String(Date.now())); }catch(e){}
+  }
+  function getExamDurationSeconds(setId){
+    try{
+      const raw = sessionStorage.getItem('examStart_' + setId);
+      if(!raw) return null;
+      const started = parseInt(raw, 10);
+      if(!started || isNaN(started)) return null;
+      return Math.max(0, Math.round((Date.now() - started) / 1000));
+    }catch(e){ return null; }
+  }
+  function clearExamTimer(setId){
+    try{ sessionStorage.removeItem('examStart_' + setId); }catch(e){}
+  }
+
   async function logEvent(eventType, setId, meta){
     if(!currentUser) return;
     try{
@@ -511,12 +529,12 @@
       });
     }catch(e){ console.warn('logEvent failed', e); }
   }
-  async function logAttempt(setId, score, total){
+  async function logAttempt(setId, score, total, durationSeconds){
     if(!currentUser) return;
     try{
-      await sb.from('attempts').insert({
-        user_id: currentUser.id, set_id: setId, score, total
-      });
+      const payload = { user_id: currentUser.id, set_id: setId, score, total };
+      if(durationSeconds !== undefined && durationSeconds !== null) payload.duration_seconds = durationSeconds;
+      await sb.from('attempts').insert(payload);
     }catch(e){ console.warn('logAttempt failed', e); }
   }
 
@@ -567,7 +585,9 @@
   }
 
   async function handleSubmission(setId, containerId, score, total){
-    await logAttempt(setId, score, total);
+    const durationSeconds = getExamDurationSeconds(setId);
+    await logAttempt(setId, score, total, durationSeconds);
+    clearExamTimer(setId);
     const history = await getAttemptHistory(setId);
     const attemptNo = history.length || 1;
     renderAttemptHistoryPanel(containerId, history);
@@ -5851,6 +5871,7 @@ function chooseMode(mode){
   if(!pendingPassageId) return;
   showPage(pendingPassageId);
   if(mode === 'exam'){
+    startExamTimer(pendingPassageId);
     setMode('exam');
   } else {
     // chosen directly from the list — unlock explanation view without requiring a finished attempt
