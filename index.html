@@ -503,8 +503,8 @@
     if(!panel){
       panel = document.createElement('div');
       panel.className = 'attempt-history-panel';
-      const scoreLine = container.querySelector('.score-line');
-      if(scoreLine && scoreLine.parentElement) scoreLine.parentElement.insertBefore(panel, scoreLine.nextSibling);
+      const submitBar = container.querySelector('.submit-bar');
+      if(submitBar && submitBar.parentElement) submitBar.parentElement.insertBefore(panel, submitBar);
       else container.appendChild(panel);
     }
     if(!history.length){ panel.innerHTML = ''; return; }
@@ -651,8 +651,8 @@
     if(!panel){
       panel = document.createElement('div');
       panel.className = 'ai-diagnosis-panel';
-      const scoreLine = container.querySelector('.score-line');
-      if(scoreLine && scoreLine.parentElement) scoreLine.parentElement.appendChild(panel);
+      const submitBar = container.querySelector('.submit-bar');
+      if(submitBar && submitBar.parentElement) submitBar.parentElement.insertBefore(panel, submitBar);
       else container.appendChild(panel);
     }
     if(state === 'loading'){
