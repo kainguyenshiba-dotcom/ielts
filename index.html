@@ -695,6 +695,8 @@
       const label = block.querySelector('.para-label');
       const paraNum = label ? (label.textContent.match(/\d+/)||['?'])[0] : '?';
       block.dataset.paraId = 'para-' + paraNum;
+      const marginNote = block.querySelector('.margin-note');
+      block.dataset.noteId = marginNote ? marginNote.id : '';
       const wrap = document.createElement('div');
       wrap.className = 'note-capture';
       wrap.innerHTML = `
@@ -702,6 +704,8 @@
         <textarea class="note-main-idea" rows="1" placeholder="Tóm ý chính..."></textarea>
         <label>Các câu sau phân tích gì (tùy chọn)</label>
         <textarea class="note-supporting" rows="1" placeholder="Câu sau bổ trợ/phân tích gì..."></textarea>
+        <label>Đoạn này giúp trả lời câu nào? <span class="req-star">*bắt buộc</span></label>
+        <textarea class="note-linked-questions" rows="1" placeholder="vd: 1, 2 (điền 'không có' nếu đoạn này không liên quan câu nào)"></textarea>
       `;
       block.appendChild(wrap);
     });
@@ -720,18 +724,58 @@
     });
   }
 
+  function parseQuestionNumbers(raw){
+    const matches = (raw || '').match(/\d+/g);
+    return matches ? matches.map(n => parseInt(n, 10)) : [];
+  }
+
   function collectNotesForContainer(containerId){
     const container = document.getElementById(containerId);
     if(!container) return null;
 
+    // Ground truth: with question -> mảnh đoạn (data-note) đã có sẵn trong đề,
+    // đảo ngược lại để biết mỗi đoạn văn thực sự giúp trả lời (các) câu nào.
+    const correctByNoteId = {};
+    container.querySelectorAll('.q-item').forEach(item=>{
+      const noteId = item.dataset.note;
+      const qNum = parseInt((item.id || '').replace(/^q/, ''), 10);
+      if(!noteId || isNaN(qNum)) return;
+      if(!correctByNoteId[noteId]) correctByNoteId[noteId] = [];
+      correctByNoteId[noteId].push(qNum);
+    });
+
     const paragraphs = [];
+    const missingParas = [];
     container.querySelectorAll('.para-block').forEach(block=>{
       const textEl = block.querySelector('.para-text');
+      const linkedRaw = ((block.querySelector('.note-linked-questions')||{}).value || '').trim();
+      if(!linkedRaw){
+        missingParas.push(block.dataset.paraId || 'para-?');
+      }
+      const correctLinked = (correctByNoteId[block.dataset.noteId] || []).sort((a,b)=>a-b);
+      const studentLinked = parseQuestionNumbers(linkedRaw).sort((a,b)=>a-b);
+      const matched = studentLinked.filter(n => correctLinked.includes(n));
+      const missed = correctLinked.filter(n => !studentLinked.includes(n));
+      const extra = studentLinked.filter(n => !correctLinked.includes(n));
+      let linkMatchStatus;
+      if(correctLinked.length === 0){
+        linkMatchStatus = studentLinked.length === 0 ? 'correct_none' : 'false_positive';
+      } else if(missed.length === 0 && extra.length === 0){
+        linkMatchStatus = 'correct';
+      } else if(matched.length > 0){
+        linkMatchStatus = 'partial';
+      } else {
+        linkMatchStatus = 'incorrect';
+      }
       paragraphs.push({
         para_id: block.dataset.paraId || 'para-?',
         para_text: textEl ? textEl.textContent.trim() : '',
         student_main_idea: (block.querySelector('.note-main-idea')||{}).value || '',
-        student_supporting_note: (block.querySelector('.note-supporting')||{}).value || ''
+        student_supporting_note: (block.querySelector('.note-supporting')||{}).value || '',
+        student_linked_questions_raw: linkedRaw,
+        student_linked_questions: studentLinked,
+        correct_linked_questions: correctLinked,
+        link_match_status: linkMatchStatus
       });
     });
 
@@ -762,8 +806,11 @@
       });
     });
 
-    if(missing.length){
-      alert('Bạn cần điền "Tóm ý câu hỏi" và "Vì sao chọn đáp án" cho tất cả câu hỏi trước khi nhận chẩn đoán AI.\nCòn thiếu: ' + missing.join(', '));
+    if(missing.length || missingParas.length){
+      let msg = '';
+      if(missingParas.length) msg += 'Bạn cần điền "Đoạn này giúp trả lời câu nào?" cho tất cả đoạn văn.\nCòn thiếu: ' + missingParas.join(', ') + '\n\n';
+      if(missing.length) msg += 'Bạn cần điền "Tóm ý câu hỏi" và "Vì sao chọn đáp án" cho tất cả câu hỏi trước khi nhận chẩn đoán AI.\nCòn thiếu: ' + missing.join(', ');
+      alert(msg.trim());
       return { incomplete: true };
     }
 
@@ -829,11 +876,17 @@
     try{
       const rows = [];
       (collected.paragraphs || []).forEach(p=>{
-        if(!p.student_main_idea && !p.student_supporting_note) return;
+        if(!p.student_main_idea && !p.student_supporting_note && !p.student_linked_questions_raw) return;
         rows.push({
           student_id: currentUser.id, set_id: setId, attempt_no: attemptNo,
           item_type: 'paragraph', item_id: p.para_id,
-          note_summary: p.student_main_idea || '', note_detail: p.student_supporting_note || ''
+          note_summary: p.student_main_idea || '', note_detail: p.student_supporting_note || '',
+          linked_questions_check: {
+            given: p.student_linked_questions,
+            correct: p.correct_linked_questions,
+            status: p.link_match_status,
+            raw: p.student_linked_questions_raw
+          }
         });
       });
       (collected.questions || []).forEach(q=>{
