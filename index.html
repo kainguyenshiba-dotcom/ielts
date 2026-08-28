@@ -6877,3 +6877,48 @@ function gradeAll15(){
       const radios = item.querySelectorAll('input[type=radio]');
       const text = item.querySelector('input[type=text]');
       if(radios.length && !item.querySelector('input[type=radio]:checked')) ok = false;
+      if(text && text.value.trim() === '') ok = false;
+    });
+    if(!ok){
+      alert('Bạn cần trả lời hết 14 câu trước khi nộp bài.');
+      return;
+    }
+  }
+
+  let correctCount = 0;
+  items.forEach(item=>{
+    const correct = item.dataset.correct;
+    let given = null;
+    const radio = item.querySelector('input[type=radio]:checked');
+    const text = item.querySelector('input[type=text]');
+    if(radio) given = radio.value;
+    else if(text) given = text.value.trim();
+
+    item.classList.remove('correct','incorrect');
+    const verdict = item.querySelector('.verdict');
+    if(given && given.toLowerCase() === correct.toLowerCase()){
+      item.classList.add('correct');
+      verdict.textContent = '✓ Đúng';
+      verdict.className = 'verdict ok';
+      correctCount++;
+    } else {
+      item.classList.add('incorrect');
+      verdict.textContent = '✗ Đáp án đúng: ' + correct;
+      verdict.className = 'verdict bad';
+    }
+  });
+  document.getElementById('scoreLine15').textContent = `Kết quả: ${correctCount} / ${items.length} câu đúng`;
+
+  if(inExam){
+    completed15 = true;
+    handleSubmission('p-set19-test1-passage3', 'p-set19-test1-passage3', correctCount, items.length);
+    const tab = document.getElementById('explainTab15');
+    tab.classList.remove('locked');
+    tab.innerHTML = '📖 Coi giải thích';
+  }
+}
+
+window.addEventListener('DOMContentLoaded', initAuthGate);
+</script>
+</body>
+</html>
