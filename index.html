@@ -206,6 +206,32 @@
   .note-capture textarea:last-child{ margin-bottom:0; }
   .note-capture .req-star{ color:var(--rust); }
   body.mode-explain .note-capture{ display:none; }
+
+  /* ---------- LINKED-QUESTIONS DROPDOWN (đoạn này giúp trả lời câu nào) ---------- */
+  .linked-q-dropdown{ position:relative; margin-bottom:6px; }
+  .linked-q-toggle{
+    width:100%; box-sizing:border-box; text-align:left; padding:7px 10px; border:1px solid var(--line);
+    border-radius:5px; background:#fff; font-family:'Inter',sans-serif; font-size:12.5px; color:var(--ink);
+    cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:6px;
+  }
+  .linked-q-toggle .lq-placeholder{ color:var(--ink-soft); }
+  .linked-q-toggle .lq-caret{ font-size:10px; color:var(--ink-soft); flex:none; transition:transform .15s; }
+  .linked-q-dropdown.open .linked-q-toggle{ border-color:var(--ochre); }
+  .linked-q-dropdown.open .lq-caret{ transform:rotate(180deg); }
+  .linked-q-menu{
+    display:none; position:absolute; z-index:25; top:calc(100% + 4px); left:0; right:0;
+    background:#fff; border:1px solid var(--line); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.18);
+    max-height:230px; overflow-y:auto; padding:6px;
+  }
+  .linked-q-dropdown.open .linked-q-menu{ display:block; }
+  .linked-q-option{
+    display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:5px;
+    font-size:12.5px; cursor:pointer; color:var(--ink);
+  }
+  .linked-q-option:hover{ background:var(--paper); }
+  .linked-q-option input{ margin:0; flex:none; }
+  .linked-q-option.hidden-used{ display:none; }
+  .linked-q-none{ border-top:1px solid var(--line); margin-top:4px; padding-top:8px; font-style:italic; }
   .ai-diagnosis-panel{
     margin-top:14px; padding:14px 16px; background:#EEF3E6; border:1px solid var(--moss);
     border-radius:8px; font-size:13px; line-height:1.55;
@@ -219,6 +245,8 @@
   .ai-tag-repeat{ border:1px solid var(--rust); color:var(--rust); }
   .ai-tag-improved{ border:1px solid var(--moss); color:var(--moss-deep); }
   .ai-progress-note{ margin-top:8px; padding:8px 10px; background:#fff; border-radius:6px; font-size:12.5px; font-style:italic; }
+  .ai-location-accuracy{ margin-top:8px; padding:8px 10px; background:#fff; border-radius:6px; font-size:12.5px; }
+  .ai-location-accuracy b{ color:var(--moss-deep); }
 
   .attempt-history-panel{
     margin-top:12px; padding:12px 16px; background:var(--card); border:1px solid var(--line);
@@ -689,6 +717,102 @@
   }
 
   // ===== Note-taking capture + AI diagnosis =====
+
+  function updateLinkedQToggleLabel(wrap){
+    const labelEl = wrap.querySelector('.lq-label');
+    if(!labelEl) return;
+    const checked = Array.from(wrap.querySelectorAll('.linked-q-check:checked'));
+    if(!checked.length){
+      labelEl.textContent = 'Chọn câu hỏi...';
+      labelEl.classList.add('lq-placeholder');
+      return;
+    }
+    labelEl.classList.remove('lq-placeholder');
+    if(checked.some(c => c.value === 'none')){
+      labelEl.textContent = 'Không trả lời câu nào cả';
+    } else {
+      const nums = checked.map(c => parseInt(c.value, 10)).sort((a,b)=>a-b);
+      labelEl.textContent = 'Câu ' + nums.join(', ');
+    }
+  }
+
+  // Ẩn (không xoá) các lựa chọn câu hỏi đã được đoạn văn KHÁC trong cùng bài chọn rồi,
+  // để tránh 1 câu hỏi bị gán trùng cho nhiều đoạn.
+  function refreshAllLinkedQDropdowns(container){
+    const wraps = Array.from(container.querySelectorAll('.linked-q-dropdown'));
+    wraps.forEach(wrap=>{
+      const usedElsewhere = new Set();
+      wraps.forEach(other=>{
+        if(other === wrap) return;
+        other.querySelectorAll('.linked-q-check:checked').forEach(cb=>{
+          if(cb.value !== 'none') usedElsewhere.add(cb.value);
+        });
+      });
+      wrap.querySelectorAll('.linked-q-option:not(.linked-q-none)').forEach(opt=>{
+        const cb = opt.querySelector('input');
+        const isUsedElsewhere = usedElsewhere.has(opt.dataset.qnum);
+        opt.classList.toggle('hidden-used', isUsedElsewhere && !cb.checked);
+      });
+    });
+  }
+
+  function buildLinkedQuestionsDropdown(container){
+    const qNums = Array.from(container.querySelectorAll('.q-item'))
+      .map(item => parseInt((item.id || '').replace(/^q/, ''), 10))
+      .filter(n => !isNaN(n))
+      .sort((a,b)=>a-b);
+
+    const wrap = document.createElement('div');
+    wrap.className = 'linked-q-dropdown';
+
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'linked-q-toggle';
+    toggle.innerHTML = '<span class="lq-label lq-placeholder">Chọn câu hỏi...</span><span class="lq-caret">▾</span>';
+    toggle.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      document.querySelectorAll('.linked-q-dropdown.open').forEach(d=>{ if(d !== wrap) d.classList.remove('open'); });
+      wrap.classList.toggle('open');
+    });
+
+    const menu = document.createElement('div');
+    menu.className = 'linked-q-menu';
+    qNums.forEach(n=>{
+      const opt = document.createElement('label');
+      opt.className = 'linked-q-option';
+      opt.dataset.qnum = String(n);
+      opt.innerHTML = `<input type="checkbox" class="linked-q-check" value="${n}"><span>Câu ${n}</span>`;
+      menu.appendChild(opt);
+    });
+    const noneOpt = document.createElement('label');
+    noneOpt.className = 'linked-q-option linked-q-none';
+    noneOpt.innerHTML = '<input type="checkbox" class="linked-q-check" value="none"><span>Không trả lời câu nào cả</span>';
+    menu.appendChild(noneOpt);
+
+    menu.addEventListener('change', (e)=>{
+      if(!e.target.classList.contains('linked-q-check')) return;
+      const checkboxes = Array.from(menu.querySelectorAll('.linked-q-check'));
+      if(e.target.value === 'none' && e.target.checked){
+        checkboxes.forEach(cb=>{ if(cb !== e.target) cb.checked = false; });
+      } else if(e.target.value !== 'none' && e.target.checked){
+        const noneCb = menu.querySelector('.linked-q-check[value="none"]');
+        if(noneCb) noneCb.checked = false;
+      }
+      updateLinkedQToggleLabel(wrap);
+      refreshAllLinkedQDropdowns(container);
+    });
+
+    wrap.appendChild(toggle);
+    wrap.appendChild(menu);
+    return wrap;
+  }
+
+  document.addEventListener('click', (e)=>{
+    document.querySelectorAll('.linked-q-dropdown.open').forEach(d=>{
+      if(!d.contains(e.target)) d.classList.remove('open');
+    });
+  });
+
   function injectNoteCapture(){
     document.querySelectorAll('.para-block:not(.note-injected)').forEach(block=>{
       block.classList.add('note-injected');
@@ -697,6 +821,7 @@
       block.dataset.paraId = 'para-' + paraNum;
       const marginNote = block.querySelector('.margin-note');
       block.dataset.noteId = marginNote ? marginNote.id : '';
+      const pageContainer = block.closest('.page-view');
       const wrap = document.createElement('div');
       wrap.className = 'note-capture';
       wrap.innerHTML = `
@@ -705,10 +830,13 @@
         <label>Các câu sau phân tích gì (tùy chọn)</label>
         <textarea class="note-supporting" rows="1" placeholder="Câu sau bổ trợ/phân tích gì..."></textarea>
         <label>Đoạn này giúp trả lời câu nào? <span class="req-star">*bắt buộc</span></label>
-        <textarea class="note-linked-questions" rows="1" placeholder="vd: 1, 2 (điền 'không có' nếu đoạn này không liên quan câu nào)"></textarea>
       `;
+      if(pageContainer){
+        wrap.appendChild(buildLinkedQuestionsDropdown(pageContainer));
+      }
       block.appendChild(wrap);
     });
+    document.querySelectorAll('.page-view').forEach(pv => refreshAllLinkedQDropdowns(pv));
     document.querySelectorAll('.q-item:not(.note-injected)').forEach(item=>{
       item.classList.add('note-injected');
       const wrap = document.createElement('div');
@@ -722,11 +850,6 @@
       const verdict = item.querySelector('.verdict');
       item.insertBefore(wrap, verdict);
     });
-  }
-
-  function parseQuestionNumbers(raw){
-    const matches = (raw || '').match(/\d+/g);
-    return matches ? matches.map(n => parseInt(n, 10)) : [];
   }
 
   function collectNotesForContainer(containerId){
@@ -748,12 +871,18 @@
     const missingParas = [];
     container.querySelectorAll('.para-block').forEach(block=>{
       const textEl = block.querySelector('.para-text');
-      const linkedRaw = ((block.querySelector('.note-linked-questions')||{}).value || '').trim();
-      if(!linkedRaw){
+      const dropdown = block.querySelector('.linked-q-dropdown');
+      const checked = dropdown ? Array.from(dropdown.querySelectorAll('.linked-q-check:checked')) : [];
+      if(!checked.length){
         missingParas.push(block.dataset.paraId || 'para-?');
       }
+      const noneChecked = checked.some(c => c.value === 'none');
+      const studentLinked = checked
+        .filter(c => c.value !== 'none')
+        .map(c => parseInt(c.value, 10))
+        .sort((a,b)=>a-b);
+      const linkedRaw = noneChecked ? 'không có' : studentLinked.join(', ');
       const correctLinked = (correctByNoteId[block.dataset.noteId] || []).sort((a,b)=>a-b);
-      const studentLinked = parseQuestionNumbers(linkedRaw).sort((a,b)=>a-b);
       const matched = studentLinked.filter(n => correctLinked.includes(n));
       const missed = correctLinked.filter(n => !studentLinked.includes(n));
       const extra = studentLinked.filter(n => !correctLinked.includes(n));
@@ -808,7 +937,7 @@
 
     if(missing.length || missingParas.length){
       let msg = '';
-      if(missingParas.length) msg += 'Bạn cần điền "Đoạn này giúp trả lời câu nào?" cho tất cả đoạn văn.\nCòn thiếu: ' + missingParas.join(', ') + '\n\n';
+      if(missingParas.length) msg += 'Bạn cần chọn "Đoạn này giúp trả lời câu nào?" cho tất cả đoạn văn (chọn câu, hoặc chọn "Không trả lời câu nào cả").\nCòn thiếu: ' + missingParas.join(', ') + '\n\n';
       if(missing.length) msg += 'Bạn cần điền "Tóm ý câu hỏi" và "Vì sao chọn đáp án" cho tất cả câu hỏi trước khi nhận chẩn đoán AI.\nCòn thiếu: ' + missing.join(', ');
       alert(msg.trim());
       return { incomplete: true };
@@ -862,9 +991,22 @@
         progressHtml += `<div class="ai-progress-note">${data.progress_note}</div>`;
       }
 
+      let locationHtml = '';
+      if(typeof data.location_accuracy_pct === 'number'){
+        let trend = '';
+        if(typeof data.avg_past_location_accuracy === 'number'){
+          const diff = data.location_accuracy_pct - data.avg_past_location_accuracy;
+          if(diff > 0) trend = ` (tăng so với TB trước: ${data.avg_past_location_accuracy}%)`;
+          else if(diff < 0) trend = ` (giảm so với TB trước: ${data.avg_past_location_accuracy}%)`;
+          else trend = ` (bằng TB trước: ${data.avg_past_location_accuracy}%)`;
+        }
+        locationHtml = `<div class="ai-location-accuracy">🧭 Định vị đoạn văn: <b>${data.location_accuracy_pct}%</b>${trend}</div>`;
+      }
+
       panel.innerHTML = `
         <h4>🤖 Chẩn đoán điểm yếu</h4>
         <div>${(data.summary_short || '').replace(/\n/g,'<br>')}</div>
+        ${locationHtml}
         ${progressHtml}
         ${qHtml}
       `;
