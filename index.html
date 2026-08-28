@@ -431,7 +431,7 @@
   /* ---------- REVIEW MODAL ---------- */
   .review-modal-card{
     background:var(--paper); border:1px solid var(--line); border-radius:12px;
-    width:680px; max-width:92vw; max-height:82vh; overflow-y:auto;
+    width:1180px; max-width:96vw; max-height:92vh; overflow-y:auto;
     padding:26px 28px 24px 28px;
     transform:translateY(8px); transition:transform .18s ease;
     box-shadow:0 18px 40px rgba(20,26,20,.25);
@@ -449,17 +449,6 @@
     padding:12px 14px; margin-bottom:16px; font-size:13px; line-height:1.5;
   }
   .review-summary h4{ margin:0 0 6px 0; font-family:'Fraunces', serif; font-size:14.5px; color:var(--moss-deep); }
-  .review-q-block{
-    border-top:1px solid var(--line); padding:12px 0; font-size:13px; line-height:1.5;
-  }
-  .review-q-block:first-child{ border-top:none; }
-  .review-q-text{ margin-bottom:6px; }
-  .review-q-note{ color:var(--ink-soft); margin-bottom:3px; }
-  .review-q-note span{ font-weight:600; color:var(--ink); }
-  .review-q-error{
-    margin-top:6px; padding:6px 10px; background:#F6E9DC; border-radius:6px;
-    color:#8A4A20; font-size:12.5px;
-  }
   .review-loading{ font-style:italic; color:var(--ink-soft); }
   .badge{
     font-family:'IBM Plex Mono', monospace; font-size:9.5px; letter-spacing:.06em;
@@ -467,6 +456,79 @@
   }
   .badge.ready{ background:#D3E1C1; color:var(--moss-deep); }
   .badge.soon{ background:#E3DDC4; color:#7A7350; }
+
+  /* ---------- REVIEW: 2-column passage/question comparison ---------- */
+  .review-two-col{ display:flex; gap:20px; align-items:flex-start; }
+  .review-passage-col{ flex:1.15; min-width:0; }
+  .review-questions-col{ flex:1; min-width:0; }
+  .review-para{
+    background:var(--card); border:1px solid var(--line); border-radius:8px;
+    padding:12px 14px; margin-bottom:12px; font-size:13px; line-height:1.6;
+  }
+  .review-para-label{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.08em;
+    color:var(--moss); margin-bottom:6px;
+  }
+  .review-para .para-text{ margin:0 0 10px 0; font-family:'Fraunces', serif; font-size:14.5px; line-height:1.6; }
+  .review-official-note, .review-student-note{
+    padding:8px 10px; border-radius:6px; font-size:12px; line-height:1.55; margin-top:6px;
+  }
+  .review-official-note{ background:var(--gold-hl); }
+  .review-student-note{ background:#fff; border:1px dashed var(--line); }
+  .review-official-note b, .review-student-note b{ display:block; margin-bottom:3px; font-size:11px; }
+  .review-q{
+    background:var(--card); border:1px solid var(--line); border-radius:8px;
+    padding:12px 14px; margin-bottom:12px; font-size:13px; line-height:1.5;
+  }
+  .review-q.correct{ border-left:4px solid var(--moss); }
+  .review-q.incorrect{ border-left:4px solid var(--rust); }
+  .review-q .q-num{
+    display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px;
+    border-radius:50%; background:var(--moss-deep); color:#fff; font-size:11px; font-weight:600; margin-right:6px;
+  }
+  .review-q .q-text{ font-weight:500; }
+  .review-controls{ display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+  .review-opt{
+    display:inline-block; padding:4px 10px; border-radius:20px; border:1px solid var(--line);
+    font-family:'IBM Plex Mono', monospace; font-size:11px; background:#fff; color:var(--ink-soft);
+  }
+  .review-opt.review-correct{ background:var(--moss-deep); color:#fff; border-color:var(--moss-deep); }
+  .review-opt.review-wrong{ background:var(--rust); color:#fff; border-color:var(--rust); }
+  .review-opt.review-answer-hint{ border-color:var(--moss); color:var(--moss-deep); font-weight:600; }
+  .review-opt.review-empty{ font-style:italic; }
+  .review-q .verdict{ font-size:11px; font-weight:600; margin-bottom:4px; }
+  .review-q .verdict.ok{ color:var(--moss-deep); }
+  .review-q .verdict.bad{ color:var(--rust); }
+  .review-official-explain, .review-student-explain{
+    padding:8px 10px; border-radius:6px; font-size:12px; line-height:1.55; margin-top:6px;
+  }
+  .review-official-explain{ background:var(--sage-hl); }
+  .review-student-explain{ background:#fff; border:1px dashed var(--line); }
+  .review-official-explain b, .review-student-explain b{ display:block; margin-bottom:3px; font-size:11px; }
+  .review-error-tag{
+    margin-top:6px; padding:6px 10px; background:#F6E9DC; border-radius:6px;
+    color:#8A4A20; font-size:12px;
+  }
+  @media (max-width: 860px){
+    .review-two-col{ flex-direction:column; }
+  }
+
+  /* ---------- WEAKNESS PROFILE (trang danh sách) ---------- */
+  .weakness-profile-panel{
+    background:#EEF3E6; border:1px solid var(--moss); border-radius:10px;
+    padding:16px 18px; margin-bottom:26px;
+  }
+  .weakness-profile-panel h3{ margin:0 0 10px 0; font-family:'Fraunces',serif; font-size:16px; color:var(--moss-deep); }
+  .weakness-tags{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .weakness-tag{
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; padding:5px 12px;
+    border-radius:20px; background:#fff; border:1px solid var(--moss); color:var(--moss-deep);
+  }
+  .weakness-tips{ display:flex; flex-direction:column; gap:8px; }
+  .weakness-tip{
+    background:#fff; border-radius:6px; padding:8px 10px; font-size:12.5px; line-height:1.5;
+  }
+  .weakness-tip b{ color:var(--moss-deep); }
 
   .page-view{ display:none; }
   .page-view.active{ display:block; }
@@ -1037,7 +1099,8 @@
         rows.push({
           student_id: currentUser.id, set_id: setId, attempt_no: attemptNo,
           item_type: 'question', item_id: q.q_id,
-          note_summary: q.student_question_paraphrase || '', note_detail: q.student_reasoning || ''
+          note_summary: q.student_question_paraphrase || '', note_detail: q.student_reasoning || '',
+          given_answer: q.given_answer || '', is_correct: !!q.is_correct
         });
       });
       if(rows.length) await sb.from('student_notes').insert(rows);
@@ -1083,6 +1146,51 @@
     }
   }
 
+  const ERROR_TIPS_VI = {
+    hieu_sai_cau_hoi: 'Trước khi đọc bài, dành 10-15 giây tóm tắt lại câu hỏi bằng lời của mình. Chú ý các từ định lượng (only, all, some, most) và từ phủ định — đây là chỗ hay bị hiểu sai nhất.',
+    chua_cap_nhat_dap_an: 'Đừng chốt đáp án ngay khi vừa thấy thông tin liên quan đầu tiên — nhiều câu cần đọc thêm 1-2 đoạn sau mới đủ dữ kiện. Nếu tạm kết luận NOT GIVEN, hãy nhớ quay lại kiểm tra khi đọc xong các đoạn sau.',
+    sai_vi_tri_thongtin: 'Trước khi trả lời, xác định rõ đoạn văn nào chứa từ khóa/paraphrase của câu hỏi. Gạch chân từ khóa trong câu hỏi rồi quét nhanh qua các đoạn để tìm đúng vị trí trước khi đọc kỹ.',
+    dung_vi_tri_thieu_tuvung: 'Bạn đã tìm đúng chỗ nhưng chưa chắc nghĩa từ. Khi ghi chú, đừng chỉ chép lại nguyên văn trong bài — hãy diễn giải lại bằng lời của mình để chắc chắn đã hiểu đúng nghĩa.',
+    note_chung_chung: 'Ghi chú cụ thể hơn: thay vì tóm tắt mơ hồ, hãy note chính xác từ khóa và ý chính từng câu trong đoạn — note càng rõ thì càng dễ tự phát hiện lỗi sai của mình.',
+    dung_thongtin_sai_suyluan: 'Bạn đã có đúng thông tin nhưng bước suy luận bị lệch. Tập viết rõ: "Đề nói X, câu hỏi hỏi Y, vậy suy ra Z" để kiểm tra logic trước khi chọn đáp án.',
+    careless: 'Đáp án và lý luận của bạn đều đúng hướng nhưng lại tick nhầm — kiểm tra lại lựa chọn trước khi qua câu tiếp theo, đặc biệt với dạng TRUE/FALSE/NOT GIVEN dễ bấm nhầm.',
+    khong_the_xac_dinh: 'Ghi chú của bạn chưa đủ rõ để xác định lỗi — hãy ghi chi tiết hơn ở các lần làm sau để AI (và chính bạn) dễ nhận ra vấn đề hơn.'
+  };
+
+  async function loadWeaknessProfile(){
+    const panel = document.getElementById('weaknessProfilePanel');
+    if(!panel || !currentUser) return;
+    try{
+      const { data } = await sb.from('ai_diagnoses').select('diagnosis_full').eq('student_id', currentUser.id);
+      const counts = {};
+      (data || []).forEach(d=>{
+        const perQ = (d.diagnosis_full && d.diagnosis_full.per_question) || [];
+        perQ.forEach(q=>{
+          if(!q.error_type) return;
+          counts[q.error_type] = (counts[q.error_type] || 0) + 1;
+        });
+      });
+      const entries = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+      if(!entries.length){
+        panel.style.display = 'none';
+        panel.innerHTML = '';
+        return;
+      }
+      let html = '<h3>🤖 Hồ sơ điểm yếu AI</h3><div class="weakness-tags">';
+      entries.forEach(([type, count])=>{
+        html += `<span class="weakness-tag">${ERROR_LABELS_VI[type] || type} ×${count}</span>`;
+      });
+      html += '</div><div class="weakness-tips">';
+      entries.forEach(([type])=>{
+        const tip = ERROR_TIPS_VI[type];
+        if(tip) html += `<div class="weakness-tip"><b>${ERROR_LABELS_VI[type] || type}:</b> ${tip}</div>`;
+      });
+      html += '</div>';
+      panel.style.display = 'block';
+      panel.innerHTML = html;
+    }catch(e){ console.warn('loadWeaknessProfile failed', e); }
+  }
+
   async function onLoggedIn(user){
     currentUser = user;
     await sb.from('profiles').upsert({
@@ -1090,6 +1198,7 @@
     });
     document.getElementById('authOverlay').classList.add('hidden');
     logEvent('login', null);
+    loadWeaknessProfile();
   }
 
   function setAuthMode(mode){
@@ -1190,6 +1299,8 @@
 <div class="wrap">
   <h1 class="page-title">Danh sách luyện đọc</h1>
   <p class="page-sub">Chọn một Practice Set, rồi chọn Reading Test và Passage để bắt đầu.</p>
+
+  <div id="weaknessProfilePanel" class="weakness-profile-panel" style="display:none;"></div>
 
   <div class="set-card">
     <div class="set-header">
@@ -6065,6 +6176,31 @@ function closeModal(){
   pendingPassageId = null;
 }
 
+function buildReviewQuestionControls(qItem, given, correct){
+  const isTfng = qItem.querySelector('.q-controls.tfng');
+  const givenNorm = (given || '').trim();
+  const correctNorm = (correct || '').trim();
+  const isCorrect = givenNorm.toLowerCase() === correctNorm.toLowerCase() && givenNorm !== '';
+  if(isTfng){
+    const opts = Array.from(isTfng.querySelectorAll('input[type=radio]')).map(r => r.value);
+    const spans = opts.map(o=>{
+      let cls = 'review-opt';
+      if(o.toUpperCase() === givenNorm.toUpperCase() && givenNorm !== ''){
+        cls += isCorrect ? ' review-correct' : ' review-wrong';
+      } else if(o.toUpperCase() === correctNorm.toUpperCase() && !isCorrect){
+        cls += ' review-answer-hint';
+      }
+      return `<span class="${cls}">${o}</span>`;
+    }).join('');
+    return `<div class="review-controls">${spans}</div>`;
+  }
+  const givenSpan = givenNorm
+    ? `<span class="review-opt ${isCorrect ? 'review-correct' : 'review-wrong'}">${givenNorm.replace(/</g,'&lt;')}</span>`
+    : `<span class="review-opt review-empty">(không trả lời)</span>`;
+  const hintSpan = !isCorrect ? `<span class="review-opt review-answer-hint">${correctNorm.replace(/</g,'&lt;')}</span>` : '';
+  return `<div class="review-controls">${givenSpan}${hintSpan}</div>`;
+}
+
 async function openReviewModal(setId, attemptNo){
   const overlay = document.getElementById('reviewModal');
   const body = document.getElementById('reviewModalBody');
@@ -6089,39 +6225,102 @@ async function openReviewModal(setId, attemptNo){
 
     const notes = notesRes.data || [];
     const diag = diagRes.data || null;
+    const container = document.getElementById(setId);
+
+    if(!notes.length){
+      body.innerHTML = (diag ? `<div class="review-summary"><h4>🤖 Nhận xét AI</h4><p>${(diag.summary_short || '').replace(/</g,'&lt;')}</p></div>` : '') +
+        '<p>Không tìm thấy note nào cho lần làm này (có thể lần này được thực hiện trước khi tính năng lưu note được bật).</p>';
+      return;
+    }
+    if(!container){
+      body.innerHTML = '<p>Không tìm thấy dữ liệu đề bài để đối chiếu.</p>';
+      return;
+    }
+
+    const paraNoteById = {};
+    const qNoteById = {};
+    notes.forEach(n=>{
+      if(n.item_type === 'paragraph') paraNoteById[n.item_id] = n;
+      else if(n.item_type === 'question') qNoteById[n.item_id] = n;
+    });
 
     const perQErrors = {};
     if(diag && diag.diagnosis_full && Array.isArray(diag.diagnosis_full.per_question)){
       diag.diagnosis_full.per_question.forEach(pq => { perQErrors[pq.q_id] = pq; });
     }
 
-    const container = document.getElementById(setId);
+    let passageHtml = '';
+    container.querySelectorAll('.para-block').forEach((block, idx)=>{
+      const paraId = block.dataset.paraId || ('para-' + (idx+1));
+      const paraNum = (block.querySelector('.para-label')||{}).textContent || '';
+      const paraTextHtml = (block.querySelector('.para-text')||{}).innerHTML || '';
+      const officialNoteHtml = (block.querySelector('.margin-note-inner')||{}).innerHTML || '';
+      const n = paraNoteById[paraId];
+
+      let studentNoteHtml = '<i>Không có note cho đoạn này.</i>';
+      if(n){
+        const lq = n.linked_questions_check || {};
+        const given = Array.isArray(lq.given) ? lq.given : [];
+        const linkedText = lq.raw || (given.length ? 'Câu ' + given.join(', ') : 'Không có');
+        const statusLabel = {
+          correct: '✓ đúng', correct_none: '✓ đúng (không liên quan câu nào)',
+          partial: '⚠ đúng 1 phần', incorrect: '✗ sai', false_positive: '✗ gán nhầm'
+        }[lq.status] || '';
+        studentNoteHtml = `
+          ${n.note_summary ? `<div><b>Ý chính:</b> ${n.note_summary.replace(/</g,'&lt;')}</div>` : ''}
+          ${n.note_detail ? `<div><b>Bổ trợ:</b> ${n.note_detail.replace(/</g,'&lt;')}</div>` : ''}
+          <div><b>Đoạn này trả lời câu:</b> ${linkedText.replace(/</g,'&lt;')} ${statusLabel ? `<span style="color:var(--ink-soft)">(${statusLabel})</span>` : ''}</div>
+        `;
+      }
+
+      passageHtml += `
+        <div class="review-para">
+          <div class="review-para-label">${paraNum.replace(/Ghi chú/i,'').trim()}</div>
+          <p class="para-text">${paraTextHtml}</p>
+          <div class="review-official-note"><b>📘 Đề gợi ý</b>${officialNoteHtml}</div>
+          <div class="review-student-note"><b>✍️ Học sinh đã ghi (lần ${attemptNo})</b>${studentNoteHtml}</div>
+        </div>`;
+    });
+
+    let questionsHtml = '';
+    container.querySelectorAll('.q-item').forEach(item=>{
+      const qId = item.id;
+      const qNum = qId.replace(/\D/g,'');
+      const correct = item.dataset.correct || '';
+      const qText = (item.querySelector('.q-text')||{}).textContent || '';
+      const officialExplainHtml = (item.querySelector('.explain')||{}).innerHTML || '';
+      const n = qNoteById[qId];
+      const given = n ? (n.given_answer || '') : '';
+      const isCorrect = n ? !!n.is_correct : (given.toLowerCase() === correct.toLowerCase() && given !== '');
+      const err = perQErrors[qId];
+
+      let studentExplainHtml = '<i>Không có note cho câu này.</i>';
+      if(n){
+        studentExplainHtml = `
+          ${n.note_summary ? `<div><b>Tóm ý câu hỏi:</b> ${n.note_summary.replace(/</g,'&lt;')}</div>` : ''}
+          ${n.note_detail ? `<div><b>Lý do chọn:</b> ${n.note_detail.replace(/</g,'&lt;')}</div>` : ''}
+        `;
+      }
+
+      questionsHtml += `
+        <div class="review-q ${isCorrect ? 'correct' : 'incorrect'}">
+          <div><span class="q-num">${qNum}</span><span class="q-text">${qText.replace(/</g,'&lt;')}</span></div>
+          ${buildReviewQuestionControls(item, given, correct)}
+          <div class="verdict ${isCorrect ? 'ok' : 'bad'}">${isCorrect ? '✓ Đúng' : '✗ Đáp án đúng: ' + correct}</div>
+          <div class="review-official-explain"><b>📘 Đề giải thích</b>${officialExplainHtml}</div>
+          <div class="review-student-explain"><b>✍️ Học sinh giải thích (lần ${attemptNo})</b>${studentExplainHtml}</div>
+          ${err ? `<div class="review-error-tag">⚠️ ${ERROR_LABELS_VI[err.error_type] || err.error_type}${err.explanation ? ': ' + err.explanation.replace(/</g,'&lt;') : ''}</div>` : ''}
+        </div>`;
+    });
 
     let html = '';
     if(diag){
       html += `<div class="review-summary"><h4>🤖 Nhận xét AI</h4><p>${(diag.summary_short || '').replace(/</g,'&lt;')}</p></div>`;
     }
-
-    const qNotes = notes.filter(n => n.item_type === 'question')
-      .sort((a,b) => (parseInt((a.item_id||'').replace(/\D/g,''))||0) - (parseInt((b.item_id||'').replace(/\D/g,''))||0));
-
-    if(!qNotes.length){
-      html += '<p>Không tìm thấy note nào cho lần làm này (có thể lần này được thực hiện trước khi tính năng lưu note được bật).</p>';
-    } else {
-      qNotes.forEach(n => {
-        const qEl = container ? container.querySelector('#' + n.item_id) : null;
-        const qText = qEl ? ((qEl.querySelector('.q-text')||{}).textContent || '') : '';
-        const qNum = n.item_id.replace(/\D/g,'');
-        const err = perQErrors[n.item_id];
-        html += `
-          <div class="review-q-block">
-            <div class="review-q-text"><b>Câu ${qNum}:</b> ${qText.replace(/</g,'&lt;')}</div>
-            <div class="review-q-note"><span>Tóm ý câu hỏi:</span> ${(n.note_summary||'—').replace(/</g,'&lt;')}</div>
-            <div class="review-q-note"><span>Lý do chọn:</span> ${(n.note_detail||'—').replace(/</g,'&lt;')}</div>
-            ${err ? `<div class="review-q-error">⚠️ ${ERROR_LABELS_VI[err.error_type] || err.error_type}${err.explanation ? ': ' + err.explanation.replace(/</g,'&lt;') : ''}</div>` : ''}
-          </div>`;
-      });
-    }
+    html += `<div class="review-two-col">
+      <div class="review-passage-col">${passageHtml}</div>
+      <div class="review-questions-col">${questionsHtml}</div>
+    </div>`;
 
     body.innerHTML = html;
   }catch(e){
