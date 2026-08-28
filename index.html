@@ -206,6 +206,18 @@
   .ai-tag-improved{ border:1px solid var(--moss); color:var(--moss-deep); }
   .ai-progress-note{ margin-top:8px; padding:8px 10px; background:#fff; border-radius:6px; font-size:12.5px; font-style:italic; }
 
+  .attempt-history-panel{
+    margin-top:12px; padding:12px 16px; background:var(--card); border:1px solid var(--line);
+    border-radius:8px; font-size:13px; line-height:1.5;
+  }
+  .attempt-history-panel h4{ margin:0 0 8px 0; font-family:'Fraunces',serif; color:var(--moss-deep); font-size:14px; }
+  .attempt-history-list{ display:flex; flex-direction:column; gap:4px; }
+  .attempt-history-row{
+    display:flex; justify-content:space-between; padding:6px 10px; background:#fff;
+    border-radius:5px; font-size:12.5px; color:var(--ink-soft);
+  }
+  .attempt-history-row span:last-child{ font-family:'IBM Plex Mono', monospace; font-weight:600; color:var(--moss-deep); }
+
   .margin-note{
     max-height:0; overflow:hidden; opacity:0;
     transition: max-height .28s ease, opacity .22s ease, margin .22s ease;
@@ -456,6 +468,54 @@
     }catch(e){ console.warn('logAttempt failed', e); }
   }
 
+  async function getAttemptHistory(setId){
+    if(!currentUser) return [];
+    try{
+      const { data, error } = await sb
+        .from('attempts')
+        .select('score,total,created_at')
+        .eq('user_id', currentUser.id)
+        .eq('set_id', setId)
+        .order('created_at', { ascending: true });
+      if(error) throw error;
+      return data || [];
+    }catch(e){
+      console.warn('getAttemptHistory failed', e);
+      return [];
+    }
+  }
+
+  function renderAttemptHistoryPanel(containerId, history){
+    const container = document.getElementById(containerId);
+    if(!container) return;
+    let panel = container.querySelector('.attempt-history-panel');
+    if(!panel){
+      panel = document.createElement('div');
+      panel.className = 'attempt-history-panel';
+      const scoreLine = container.querySelector('.score-line');
+      if(scoreLine && scoreLine.parentElement) scoreLine.parentElement.insertBefore(panel, scoreLine.nextSibling);
+      else container.appendChild(panel);
+    }
+    if(!history.length){ panel.innerHTML = ''; return; }
+    const rows = history.map((a, i) => {
+      const d = new Date(a.created_at);
+      const dateStr = d.toLocaleString('vi-VN');
+      return `<div class="attempt-history-row"><span>Lần ${i+1} — ${dateStr}</span><span>${a.score}/${a.total}</span></div>`;
+    }).join('');
+    panel.innerHTML = `
+      <h4>📅 Lịch sử làm bài (${history.length} lần)</h4>
+      <div class="attempt-history-list">${rows}</div>
+    `;
+  }
+
+  async function handleSubmission(setId, containerId, score, total){
+    await logAttempt(setId, score, total);
+    const history = await getAttemptHistory(setId);
+    const attemptNo = history.length || 1;
+    renderAttemptHistoryPanel(containerId, history);
+    diagnoseAndShow(setId, containerId, score, total, attemptNo);
+  }
+
   // ===== Note-taking capture + AI diagnosis =====
   function injectNoteCapture(){
     document.querySelectorAll('.para-block:not(.note-injected)').forEach(block=>{
@@ -592,7 +652,7 @@
     }
   }
 
-  async function diagnoseAndShow(setId, containerId, score, total){
+  async function diagnoseAndShow(setId, containerId, score, total, attemptNo){
     const collected = collectNotesForContainer(containerId);
     if(!collected || collected.incomplete) return;
     if(!currentUser){ return; }
@@ -603,7 +663,7 @@
         body: {
           student_id: currentUser.id,
           set_id: setId,
-          attempt_no: 1,
+          attempt_no: attemptNo || 1,
           score, total,
           paragraphs: collected.paragraphs,
           questions: collected.questions
@@ -5693,8 +5753,7 @@ function gradeAll(){
 
   if(inExam){
     completed = true;
-    logAttempt('p-set20-test1-passage1', correctCount, items.length);
-    diagnoseAndShow('p-set20-test1-passage1', 'p-set20-test1-passage1', correctCount, items.length);
+    handleSubmission('p-set20-test1-passage1', 'p-set20-test1-passage1', correctCount, items.length);
     const tab = document.getElementById('explainTab');
     tab.classList.remove('locked');
     tab.innerHTML = '📖 Coi giải thích';
@@ -5772,8 +5831,7 @@ function gradeAll2(){
 
   if(inExam){
     completed2 = true;
-    logAttempt('p-set20-test1-passage2', correctCount, items.length);
-    diagnoseAndShow('p-set20-test1-passage2', 'p-set20-test1-passage2', correctCount, items.length);
+    handleSubmission('p-set20-test1-passage2', 'p-set20-test1-passage2', correctCount, items.length);
     const tab = document.getElementById('explainTab2');
     tab.classList.remove('locked');
     tab.innerHTML = '📖 Coi giải thích';
@@ -5851,8 +5909,7 @@ function gradeAll3(){
 
   if(inExam){
     completed3 = true;
-    logAttempt('p-set20-test1-passage3', correctCount, items.length);
-    diagnoseAndShow('p-set20-test1-passage3', 'p-set20-test1-passage3', correctCount, items.length);
+    handleSubmission('p-set20-test1-passage3', 'p-set20-test1-passage3', correctCount, items.length);
     const tab = document.getElementById('explainTab3');
     tab.classList.remove('locked');
     tab.innerHTML = '📖 Coi giải thích';
@@ -5930,8 +5987,7 @@ function gradeAll4(){
 
   if(inExam){
     completed4 = true;
-    logAttempt('p-set20-test2-passage1', correctCount, items.length);
-    diagnoseAndShow('p-set20-test2-passage1', 'p-set20-test2-passage1', correctCount, items.length);
+    handleSubmission('p-set20-test2-passage1', 'p-set20-test2-passage1', correctCount, items.length);
     const tab = document.getElementById('explainTab4');
     tab.classList.remove('locked');
     tab.innerHTML = '📖 Coi giải thích';
@@ -6033,8 +6089,7 @@ function gradeAll5(){
 
   if(inExam){
     completed5 = true;
-    logAttempt('p-set20-test2-passage2', correctCount, items.length);
-    diagnoseAndShow('p-set20-test2-passage2', 'p-set20-test2-passage2', correctCount, items.length);
+    handleSubmission('p-set20-test2-passage2', 'p-set20-test2-passage2', correctCount, items.length);
     const tab = document.getElementById('explainTab5');
     tab.classList.remove('locked');
     tab.innerHTML = '📖 Coi giải thích';
@@ -6112,8 +6167,7 @@ function gradeAll6(){
 
   if(inExam){
     completed6 = true;
-    logAttempt('p-set20-test2-passage3', correctCount, items.length);
-    diagnoseAndShow('p-set20-test2-passage3', 'p-set20-test2-passage3', correctCount, items.length);
+    handleSubmission('p-set20-test2-passage3', 'p-set20-test2-passage3', correctCount, items.length);
     const tab = document.getElementById('explainTab6');
     tab.classList.remove('locked');
     tab.innerHTML = '📖 Coi giải thích';
@@ -6191,8 +6245,7 @@ function gradeAll7(){
 
   if(inExam){
     completed7 = true;
-    logAttempt('p-set20-test3-passage1', correctCount, items.length);
-    diagnoseAndShow('p-set20-test3-passage1', 'p-set20-test3-passage1', correctCount, items.length);
+    handleSubmission('p-set20-test3-passage1', 'p-set20-test3-passage1', correctCount, items.length);
     const tab = document.getElementById('explainTab7');
     tab.classList.remove('locked');
     tab.innerHTML = '📖 Coi giải thích';
@@ -6292,8 +6345,7 @@ function gradeAll8(){
 
   if(inExam){
     completed8 = true;
-    logAttempt('p-set20-test3-passage2', correctCount, items.length);
-    diagnoseAndShow('p-set20-test3-passage2', 'p-set20-test3-passage2', correctCount, items.length);
+    handleSubmission('p-set20-test3-passage2', 'p-set20-test3-passage2', correctCount, items.length);
     const tab = document.getElementById('explainTab8');
     tab.classList.remove('locked');
     tab.innerHTML = '📖 Coi giải thích';
@@ -6371,8 +6423,7 @@ function gradeAll9(){
 
   if(inExam){
     completed9 = true;
-    logAttempt('p-set20-test3-passage3', correctCount, items.length);
-    diagnoseAndShow('p-set20-test3-passage3', 'p-set20-test3-passage3', correctCount, items.length);
+    handleSubmission('p-set20-test3-passage3', 'p-set20-test3-passage3', correctCount, items.length);
     const tab = document.getElementById('explainTab9');
     tab.classList.remove('locked');
     tab.innerHTML = '📖 Coi giải thích';
@@ -6450,8 +6501,7 @@ function gradeAll10(){
 
   if(inExam){
     completed10 = true;
-    logAttempt('p-set20-test4-passage1', correctCount, items.length);
-    diagnoseAndShow('p-set20-test4-passage1', 'p-set20-test4-passage1', correctCount, items.length);
+    handleSubmission('p-set20-test4-passage1', 'p-set20-test4-passage1', correctCount, items.length);
     const tab = document.getElementById('explainTab10');
     tab.classList.remove('locked');
     tab.innerHTML = '📖 Coi giải thích';
@@ -6529,8 +6579,7 @@ function gradeAll11(){
 
   if(inExam){
     completed11 = true;
-    logAttempt('p-set20-test4-passage2', correctCount, items.length);
-    diagnoseAndShow('p-set20-test4-passage2', 'p-set20-test4-passage2', correctCount, items.length);
+    handleSubmission('p-set20-test4-passage2', 'p-set20-test4-passage2', correctCount, items.length);
     const tab = document.getElementById('explainTab11');
     tab.classList.remove('locked');
     tab.innerHTML = '📖 Coi giải thích';
@@ -6608,8 +6657,7 @@ function gradeAll12(){
 
   if(inExam){
     completed12 = true;
-    logAttempt('p-set20-test4-passage3', correctCount, items.length);
-    diagnoseAndShow('p-set20-test4-passage3', 'p-set20-test4-passage3', correctCount, items.length);
+    handleSubmission('p-set20-test4-passage3', 'p-set20-test4-passage3', correctCount, items.length);
     const tab = document.getElementById('explainTab12');
     tab.classList.remove('locked');
     tab.innerHTML = '📖 Coi giải thích';
@@ -6687,8 +6735,7 @@ function gradeAll13(){
 
   if(inExam){
     completed13 = true;
-    logAttempt('p-set19-test1-passage1', correctCount, items.length);
-    diagnoseAndShow('p-set19-test1-passage1', 'p-set19-test1-passage1', correctCount, items.length);
+    handleSubmission('p-set19-test1-passage1', 'p-set19-test1-passage1', correctCount, items.length);
     const tab = document.getElementById('explainTab13');
     tab.classList.remove('locked');
     tab.innerHTML = '📖 Coi giải thích';
@@ -6788,8 +6835,7 @@ function gradeAll14(){
 
   if(inExam){
     completed14 = true;
-    logAttempt('p-set19-test1-passage2', correctCount, items.length);
-    diagnoseAndShow('p-set19-test1-passage2', 'p-set19-test1-passage2', correctCount, items.length);
+    handleSubmission('p-set19-test1-passage2', 'p-set19-test1-passage2', correctCount, items.length);
     const tab = document.getElementById('explainTab14');
     tab.classList.remove('locked');
     tab.innerHTML = '📖 Coi giải thích';
@@ -6831,49 +6877,3 @@ function gradeAll15(){
       const radios = item.querySelectorAll('input[type=radio]');
       const text = item.querySelector('input[type=text]');
       if(radios.length && !item.querySelector('input[type=radio]:checked')) ok = false;
-      if(text && text.value.trim() === '') ok = false;
-    });
-    if(!ok){
-      alert('Bạn cần trả lời hết 14 câu trước khi nộp bài.');
-      return;
-    }
-  }
-
-  let correctCount = 0;
-  items.forEach(item=>{
-    const correct = item.dataset.correct;
-    let given = null;
-    const radio = item.querySelector('input[type=radio]:checked');
-    const text = item.querySelector('input[type=text]');
-    if(radio) given = radio.value;
-    else if(text) given = text.value.trim();
-
-    item.classList.remove('correct','incorrect');
-    const verdict = item.querySelector('.verdict');
-    if(given && given.toLowerCase() === correct.toLowerCase()){
-      item.classList.add('correct');
-      verdict.textContent = '✓ Đúng';
-      verdict.className = 'verdict ok';
-      correctCount++;
-    } else {
-      item.classList.add('incorrect');
-      verdict.textContent = '✗ Đáp án đúng: ' + correct;
-      verdict.className = 'verdict bad';
-    }
-  });
-  document.getElementById('scoreLine15').textContent = `Kết quả: ${correctCount} / ${items.length} câu đúng`;
-
-  if(inExam){
-    completed15 = true;
-    logAttempt('p-set19-test1-passage3', correctCount, items.length);
-    diagnoseAndShow('p-set19-test1-passage3', 'p-set19-test1-passage3', correctCount, items.length);
-    const tab = document.getElementById('explainTab15');
-    tab.classList.remove('locked');
-    tab.innerHTML = '📖 Coi giải thích';
-  }
-}
-
-window.addEventListener('DOMContentLoaded', initAuthGate);
-</script>
-</body>
-</html>
