@@ -6389,6 +6389,47 @@ function allAnswered(){
   return ok;
 }
 
+// ===== Bắt buộc: chặn nộp bài nếu chưa điền hết các ô "*bắt buộc" =====
+// (Đoạn này giúp trả lời câu nào / Tóm ý câu hỏi / Vì sao chọn đáp án này)
+// Không có ngoại lệ: kể cả đoạn văn học sinh chưa cuộn tới cũng phải được điền.
+function checkRequiredNotesFilled(containerId){
+  const container = document.getElementById(containerId);
+  if(!container) return { ok: true, missingParas: [], missingQuestions: [] };
+
+  const missingParas = [];
+  container.querySelectorAll('.para-block').forEach(block=>{
+    const dropdown = block.querySelector('.linked-q-dropdown');
+    const checked = dropdown ? dropdown.querySelectorAll('.linked-q-check:checked') : [];
+    if(!checked.length) missingParas.push(block.dataset.paraId || '?');
+  });
+
+  const missingQuestions = [];
+  container.querySelectorAll('.q-item').forEach(item=>{
+    const paraphrase = item.querySelector('.note-q-paraphrase');
+    const reasoning = item.querySelector('.note-q-reasoning');
+    if(!paraphrase || paraphrase.value.trim() === '' || !reasoning || reasoning.value.trim() === ''){
+      missingQuestions.push(item.id);
+    }
+  });
+
+  return {
+    ok: missingParas.length === 0 && missingQuestions.length === 0,
+    missingParas,
+    missingQuestions
+  };
+}
+
+function alertMissingRequiredNotes(check){
+  let msg = 'Bạn cần điền đầy đủ các mục có dấu *bắt buộc trước khi nộp bài:\n';
+  if(check.missingParas.length){
+    msg += '- "Đoạn này giúp trả lời câu nào?" còn thiếu ở: ' + check.missingParas.join(', ') + '\n';
+  }
+  if(check.missingQuestions.length){
+    msg += '- "Tóm ý câu hỏi" / "Vì sao chọn đáp án này" còn thiếu ở: ' + check.missingQuestions.join(', ');
+  }
+  alert(msg.trim());
+}
+
 function toggleNote(btn, id){
   const note = document.getElementById(id);
   note.classList.toggle('open');
@@ -6449,6 +6490,10 @@ function gradeAll(){
   if(inExam && !allAnswered()){
     alert('Bạn cần trả lời hết 13 câu trước khi nộp bài.');
     return;
+  }
+  if(inExam){
+    const notesCheck = checkRequiredNotesFilled('p-set20-test1-passage1');
+    if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
   }
 
   let correctCount = 0;
@@ -6529,6 +6574,11 @@ function gradeAll2(){
       return;
     }
   }
+  if(inExam){
+    const notesCheck = checkRequiredNotesFilled('p-set20-test1-passage2');
+    if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
+  }
+
 
   let correctCount = 0;
   items.forEach(item=>{
@@ -6607,6 +6657,11 @@ function gradeAll3(){
       return;
     }
   }
+  if(inExam){
+    const notesCheck = checkRequiredNotesFilled('p-set20-test1-passage3');
+    if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
+  }
+
 
   let correctCount = 0;
   items.forEach(item=>{
@@ -6685,6 +6740,11 @@ function gradeAll4(){
       return;
     }
   }
+  if(inExam){
+    const notesCheck = checkRequiredNotesFilled('p-set20-test2-passage1');
+    if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
+  }
+
 
   let correctCount = 0;
   items.forEach(item=>{
@@ -6765,6 +6825,11 @@ function gradeAll5(){
       return;
     }
   }
+  if(inExam){
+    const notesCheck = checkRequiredNotesFilled('p-set20-test2-passage2');
+    if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
+  }
+
 
   let correctCount = 0;
   items.forEach(item=>{
@@ -6865,6 +6930,11 @@ function gradeAll6(){
       return;
     }
   }
+  if(inExam){
+    const notesCheck = checkRequiredNotesFilled('p-set20-test2-passage3');
+    if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
+  }
+
 
   let correctCount = 0;
   items.forEach(item=>{
@@ -6943,6 +7013,11 @@ function gradeAll7(){
       return;
     }
   }
+  if(inExam){
+    const notesCheck = checkRequiredNotesFilled('p-set20-test3-passage1');
+    if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
+  }
+
 
   let correctCount = 0;
   items.forEach(item=>{
@@ -7023,6 +7098,11 @@ function gradeAll8(){
       return;
     }
   }
+  if(inExam){
+    const notesCheck = checkRequiredNotesFilled('p-set20-test3-passage2');
+    if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
+  }
+
 
   let correctCount = 0;
   items.forEach(item=>{
@@ -7121,6 +7201,11 @@ function gradeAll9(){
       return;
     }
   }
+  if(inExam){
+    const notesCheck = checkRequiredNotesFilled('p-set20-test3-passage3');
+    if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
+  }
+
 
   let correctCount = 0;
   items.forEach(item=>{
@@ -7199,6 +7284,11 @@ function gradeAll10(){
       return;
     }
   }
+  if(inExam){
+    const notesCheck = checkRequiredNotesFilled('p-set20-test4-passage1');
+    if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
+  }
+
 
   let correctCount = 0;
   items.forEach(item=>{
@@ -7277,6 +7367,11 @@ function gradeAll11(){
       return;
     }
   }
+  if(inExam){
+    const notesCheck = checkRequiredNotesFilled('p-set20-test4-passage2');
+    if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
+  }
+
 
   let correctCount = 0;
   items.forEach(item=>{
@@ -7355,6 +7450,11 @@ function gradeAll12(){
       return;
     }
   }
+  if(inExam){
+    const notesCheck = checkRequiredNotesFilled('p-set20-test4-passage3');
+    if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
+  }
+
 
   let correctCount = 0;
   items.forEach(item=>{
@@ -7433,6 +7533,11 @@ function gradeAll13(){
       return;
     }
   }
+  if(inExam){
+    const notesCheck = checkRequiredNotesFilled('p-set19-test1-passage1');
+    if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
+  }
+
 
   let correctCount = 0;
   items.forEach(item=>{
@@ -7513,6 +7618,11 @@ function gradeAll14(){
       return;
     }
   }
+  if(inExam){
+    const notesCheck = checkRequiredNotesFilled('p-set19-test1-passage2');
+    if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
+  }
+
 
   let correctCount = 0;
   items.forEach(item=>{
@@ -7609,6 +7719,11 @@ function gradeAll15(){
       return;
     }
   }
+  if(inExam){
+    const notesCheck = checkRequiredNotesFilled('p-set19-test1-passage3');
+    if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
+  }
+
 
   let correctCount = 0;
   items.forEach(item=>{
