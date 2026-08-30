@@ -631,6 +631,83 @@
   .auth-toggle a{ color:var(--ochre); cursor:pointer; text-decoration:underline; }
   .auth-error{ color:var(--rust); font-size:12.5px; margin-bottom:8px; min-height:1em; }
   .auth-loading{ text-align:center; color:#EFE9D3; font-family:'IBM Plex Mono',monospace; font-size:13px; }
+
+  /* ===== Student highlight & note-taking (free selection tool) ===== */
+  :root{
+    --u-hl-1:#FDF3B8; /* pastel yellow */
+    --u-hl-2:#D3ECD8; /* pastel green */
+    --u-hl-3:#D3E5F6; /* pastel blue */
+    --u-hl-4:#F6D9E1; /* pastel pink */
+    --u-hl-5:#E4DAF5; /* pastel purple */
+  }
+  .u-hl{ border-radius:2px; padding:0 1px; }
+  .u-hl-c1{ background:var(--u-hl-1); }
+  .u-hl-c2{ background:var(--u-hl-2); }
+  .u-hl-c3{ background:var(--u-hl-3); }
+  .u-hl-c4{ background:var(--u-hl-4); }
+  .u-hl-c5{ background:var(--u-hl-5); }
+  .u-hl-underline{ text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:2px; text-decoration-color:var(--rust); }
+  .u-hl-strike{ text-decoration:line-through; text-decoration-thickness:2px; text-decoration-color:var(--rust); }
+
+  .u-hl-pencil{
+    display:inline-block; border:none; background:transparent; cursor:pointer;
+    font-size:12px; line-height:1; padding:0 2px; margin-left:1px; vertical-align:2px;
+    color:var(--ochre); opacity:.75; transition: all .15s;
+  }
+  .u-hl-pencil:hover{ opacity:1; transform:scale(1.15); }
+  .u-hl-pencil.has-note{ color:var(--rust); opacity:1; }
+
+  .u-hl-toolbar{
+    position:absolute; z-index:9999; display:none; align-items:center; gap:6px;
+    background:var(--moss-deep); padding:7px 9px; border-radius:9px;
+    box-shadow:0 6px 20px rgba(0,0,0,.28);
+  }
+  .u-hl-toolbar::after{
+    content:''; position:absolute; left:50%; bottom:-5px; transform:translateX(-50%);
+    width:10px; height:10px; background:var(--moss-deep); clip-path:polygon(0 0,100% 0,50% 100%);
+  }
+  .u-hl-swatch{
+    width:20px; height:20px; border-radius:50%; border:1.5px solid rgba(255,255,255,.55);
+    background:var(--sw); cursor:pointer; padding:0; transition: transform .12s;
+  }
+  .u-hl-swatch:hover{ transform:scale(1.18); }
+  .u-hl-sep{ width:1px; height:20px; background:rgba(255,255,255,.25); }
+  .u-hl-deco-btn{
+    border:1px solid rgba(255,255,255,.4); background:transparent; color:#EFE9D3;
+    font-family:'Inter',sans-serif; font-size:12px; font-weight:600; border-radius:5px;
+    padding:3px 8px; cursor:pointer; transition: background .12s;
+  }
+  .u-hl-deco-btn:hover{ background:rgba(255,255,255,.15); }
+  .u-hl-clear-btn{
+    border:none; background:transparent; color:#E7B3A6; font-size:14px; cursor:pointer;
+    padding:2px 4px; line-height:1;
+  }
+  .u-hl-clear-btn:hover{ color:#fff; }
+
+  .u-hl-popover{
+    position:absolute; z-index:9999; display:none; width:250px;
+    background:var(--card); border:1px solid var(--line); border-radius:8px;
+    box-shadow:0 8px 26px rgba(0,0,0,.22); padding:10px 12px;
+  }
+  .u-hl-popover label{
+    display:block; font-size:11px; font-weight:600; color:var(--moss-deep);
+    font-family:'IBM Plex Mono',monospace; letter-spacing:.04em; margin-bottom:6px;
+  }
+  .u-hl-popover textarea{
+    width:100%; resize:vertical; border:1px solid var(--line); border-radius:6px;
+    padding:7px 8px; font-family:'Inter',sans-serif; font-size:12.5px; color:var(--ink);
+    background:#fff;
+  }
+  .u-hl-popover-actions{ display:flex; justify-content:space-between; margin-top:8px; gap:8px; }
+  .u-hl-pop-delete{
+    border:none; background:transparent; color:var(--ink-soft); font-size:11.5px;
+    cursor:pointer; text-decoration:underline; padding:4px 2px;
+  }
+  .u-hl-pop-save{
+    border:none; background:var(--moss); color:#fff; font-size:12px; font-weight:600;
+    border-radius:5px; padding:6px 12px; cursor:pointer;
+  }
+  .u-hl-pop-save:hover{ background:var(--moss-deep); }
 </style>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script>
@@ -7887,6 +7964,293 @@ function gradeAll15(){
 }
 
 window.addEventListener('DOMContentLoaded', initAuthGate);
+</script>
+
+<script>
+/* ===================== STUDENT HIGHLIGHT & NOTE-TAKING TOOL ===================== */
+(function(){
+  var COLORS = ['c1','c2','c3','c4','c5'];
+  var toolbar = null, popover = null;
+  var savedRange = null;
+  var activeSpanForNote = null;
+
+  function getPassagePara(node){
+    if(!node) return null;
+    var el = node.nodeType === 3 ? node.parentElement : node;
+    return el ? el.closest('.passage-panel .para-text') : null;
+  }
+
+  function buildToolbar(){
+    toolbar = document.createElement('div');
+    toolbar.className = 'u-hl-toolbar';
+    toolbar.innerHTML =
+      '<button type="button" class="u-hl-swatch" data-color="c1" style="--sw:var(--u-hl-1)" title="Vàng"></button>' +
+      '<button type="button" class="u-hl-swatch" data-color="c2" style="--sw:var(--u-hl-2)" title="Xanh lá"></button>' +
+      '<button type="button" class="u-hl-swatch" data-color="c3" style="--sw:var(--u-hl-3)" title="Xanh dương"></button>' +
+      '<button type="button" class="u-hl-swatch" data-color="c4" style="--sw:var(--u-hl-4)" title="Hồng"></button>' +
+      '<button type="button" class="u-hl-swatch" data-color="c5" style="--sw:var(--u-hl-5)" title="Tím"></button>' +
+      '<span class="u-hl-sep"></span>' +
+      '<button type="button" class="u-hl-deco-btn" data-deco="underline" title="Gạch chân"><u>U</u></button>' +
+      '<button type="button" class="u-hl-deco-btn" data-deco="strike" title="Gạch bỏ"><s>S</s></button>' +
+      '<span class="u-hl-sep"></span>' +
+      '<button type="button" class="u-hl-clear-btn" title="Xoá highlight">&#10005;</button>';
+    document.body.appendChild(toolbar);
+    toolbar.addEventListener('mousedown', function(e){ e.preventDefault(); });
+    toolbar.addEventListener('click', function(e){
+      var swatch = e.target.closest('.u-hl-swatch');
+      var deco = e.target.closest('.u-hl-deco-btn');
+      var clear = e.target.closest('.u-hl-clear-btn');
+      if(swatch) applyColor(swatch.getAttribute('data-color'));
+      else if(deco) applyDeco(deco.getAttribute('data-deco'));
+      else if(clear) clearHighlight();
+    });
+  }
+
+  function showToolbarForSelection(){
+    var sel = window.getSelection();
+    if(!sel || sel.isCollapsed || sel.rangeCount === 0){ hideToolbar(); return; }
+    var range = sel.getRangeAt(0);
+    if(range.collapsed){ hideToolbar(); return; }
+    var p1 = getPassagePara(range.startContainer);
+    var p2 = getPassagePara(range.endContainer);
+    if(!p1 || !p2 || p1 !== p2){ hideToolbar(); return; }
+    if(!range.toString().trim()){ hideToolbar(); return; }
+    savedRange = range.cloneRange();
+    var rect = range.getBoundingClientRect();
+    if(rect.width === 0 && rect.height === 0){ hideToolbar(); return; }
+    positionToolbar(rect);
+  }
+
+  function positionToolbar(rect){
+    if(!toolbar) buildToolbar();
+    toolbar.style.display = 'flex';
+    var tw = toolbar.offsetWidth, th = toolbar.offsetHeight;
+    var top = window.scrollY + rect.top - th - 12;
+    if(top < window.scrollY + 4) top = window.scrollY + rect.bottom + 12;
+    var left = window.scrollX + rect.left + rect.width/2 - tw/2;
+    var maxLeft = window.scrollX + document.documentElement.clientWidth - tw - 8;
+    left = Math.max(window.scrollX + 8, Math.min(left, maxLeft));
+    toolbar.style.top = top + 'px';
+    toolbar.style.left = left + 'px';
+  }
+
+  function hideToolbar(){
+    if(toolbar) toolbar.style.display = 'none';
+  }
+
+  function findContainingSpan(range){
+    var node = range.commonAncestorContainer;
+    var el = node.nodeType === 3 ? node.parentElement : node;
+    var span = el ? el.closest('.u-hl') : null;
+    if(span && span.contains(range.startContainer) && span.contains(range.endContainer)) return span;
+    return null;
+  }
+
+  function ensureSpanForRange(){
+    if(!savedRange) return null;
+    var span = findContainingSpan(savedRange);
+    if(span) return span;
+    span = document.createElement('span');
+    span.className = 'u-hl';
+    try{
+      span.appendChild(savedRange.extractContents());
+      savedRange.insertNode(span);
+    }catch(err){ return null; }
+    var r = document.createRange();
+    r.selectNodeContents(span);
+    savedRange = r;
+    return span;
+  }
+
+  function applyColor(color){
+    var span = ensureSpanForRange();
+    if(!span) return;
+    COLORS.forEach(function(c){ span.classList.remove('u-hl-' + c); });
+    if(span.getAttribute('data-color') === color){
+      span.removeAttribute('data-color');
+    } else {
+      span.classList.add('u-hl-' + color);
+      span.setAttribute('data-color', color);
+    }
+    ensurePencil(span);
+    persistParagraph(span);
+    hideToolbar();
+    clearNativeSelection();
+  }
+
+  function applyDeco(deco){
+    var span = ensureSpanForRange();
+    if(!span) return;
+    span.classList.remove('u-hl-underline','u-hl-strike');
+    if(span.getAttribute('data-deco') === deco){
+      span.removeAttribute('data-deco');
+    } else {
+      span.classList.add('u-hl-' + deco);
+      span.setAttribute('data-deco', deco);
+    }
+    ensurePencil(span);
+    persistParagraph(span);
+    hideToolbar();
+    clearNativeSelection();
+  }
+
+  function clearHighlight(){
+    if(!savedRange){ hideToolbar(); return; }
+    var span = findContainingSpan(savedRange);
+    if(span){
+      var parent = span.parentNode;
+      var pencil = span.nextElementSibling;
+      if(pencil && !pencil.classList.contains('u-hl-pencil')) pencil = null;
+      while(span.firstChild) parent.insertBefore(span.firstChild, span);
+      parent.removeChild(span);
+      if(pencil) pencil.remove();
+      persistParagraphByElement(parent.closest ? parent.closest('.para-text') : null);
+    }
+    hideToolbar();
+    clearNativeSelection();
+  }
+
+  function clearNativeSelection(){
+    var sel = window.getSelection();
+    if(sel) sel.removeAllRanges();
+    savedRange = null;
+  }
+
+  function ensurePencil(span){
+    var next = span.nextSibling;
+    if(next && next.nodeType === 1 && next.classList.contains('u-hl-pencil')){
+      updatePencilState(next, span);
+      return;
+    }
+    var pencil = document.createElement('button');
+    pencil.type = 'button';
+    pencil.className = 'u-hl-pencil';
+    span.parentNode.insertBefore(pencil, span.nextSibling);
+    updatePencilState(pencil, span);
+  }
+
+  function updatePencilState(pencil, span){
+    pencil.textContent = '\u270E';
+    var note = span.getAttribute('data-note');
+    pencil.classList.toggle('has-note', !!(note && note.trim()));
+  }
+
+  function openNotePopover(span, pencil){
+    activeSpanForNote = span;
+    if(!popover){
+      popover = document.createElement('div');
+      popover.className = 'u-hl-popover';
+      popover.innerHTML =
+        '<label>Ghi chú của bạn</label>' +
+        '<textarea rows="3" placeholder="Nhập ghi chú..."></textarea>' +
+        '<div class="u-hl-popover-actions">' +
+        '<button type="button" class="u-hl-pop-delete">Xoá ghi chú</button>' +
+        '<button type="button" class="u-hl-pop-save">Lưu</button>' +
+        '</div>';
+      document.body.appendChild(popover);
+      popover.addEventListener('mousedown', function(e){ e.stopPropagation(); });
+      popover.querySelector('.u-hl-pop-save').addEventListener('click', function(){
+        var val = popover.querySelector('textarea').value;
+        if(activeSpanForNote){
+          if(val.trim()) activeSpanForNote.setAttribute('data-note', val);
+          else activeSpanForNote.removeAttribute('data-note');
+          var pc = activeSpanForNote.nextElementSibling;
+          if(pc && pc.classList.contains('u-hl-pencil')) updatePencilState(pc, activeSpanForNote);
+          persistParagraph(activeSpanForNote);
+        }
+        closeNotePopover();
+      });
+      popover.querySelector('.u-hl-pop-delete').addEventListener('click', function(){
+        if(activeSpanForNote){
+          activeSpanForNote.removeAttribute('data-note');
+          var pc = activeSpanForNote.nextElementSibling;
+          if(pc && pc.classList.contains('u-hl-pencil')) updatePencilState(pc, activeSpanForNote);
+          persistParagraph(activeSpanForNote);
+        }
+        closeNotePopover();
+      });
+    }
+    popover.querySelector('textarea').value = span.getAttribute('data-note') || '';
+    popover.style.display = 'block';
+    var rect = pencil.getBoundingClientRect();
+    var top = window.scrollY + rect.bottom + 6;
+    var left = window.scrollX + rect.left;
+    var maxLeft = window.scrollX + document.documentElement.clientWidth - 262;
+    left = Math.max(window.scrollX + 8, Math.min(left, maxLeft));
+    popover.style.top = top + 'px';
+    popover.style.left = left + 'px';
+    popover.querySelector('textarea').focus();
+  }
+
+  function closeNotePopover(){
+    if(popover) popover.style.display = 'none';
+    activeSpanForNote = null;
+  }
+
+  function storageKeyFor(paraEl){
+    var page = paraEl.closest('.page-view');
+    if(!page || !page.id) return null;
+    var paras = Array.prototype.slice.call(page.querySelectorAll('.passage-panel .para-text'));
+    var idx = paras.indexOf(paraEl);
+    if(idx === -1) return null;
+    return 'wmm_hl::' + page.id + '::' + idx;
+  }
+
+  function persistParagraph(span){
+    persistParagraphByElement(span.closest('.para-text'));
+  }
+
+  function persistParagraphByElement(paraEl){
+    if(!paraEl) return;
+    var key = storageKeyFor(paraEl);
+    if(!key) return;
+    try{ localStorage.setItem(key, paraEl.innerHTML); }catch(e){}
+  }
+
+  function restoreAll(){
+    document.querySelectorAll('.page-view').forEach(function(page){
+      if(!page.id) return;
+      var paras = page.querySelectorAll('.passage-panel .para-text');
+      paras.forEach(function(paraEl, idx){
+        var key = 'wmm_hl::' + page.id + '::' + idx;
+        try{
+          var saved = localStorage.getItem(key);
+          if(saved !== null) paraEl.innerHTML = saved;
+        }catch(e){}
+      });
+    });
+  }
+
+  // Delegated click: pencil open, click-outside close
+  document.addEventListener('click', function(e){
+    var pencil = e.target.closest ? e.target.closest('.u-hl-pencil') : null;
+    if(pencil){
+      var span = pencil.previousElementSibling;
+      if(span && span.classList.contains('u-hl')) openNotePopover(span, pencil);
+      return;
+    }
+    if(popover && popover.style.display === 'block' && !popover.contains(e.target)){
+      closeNotePopover();
+    }
+    if(toolbar && toolbar.style.display !== 'none' && !toolbar.contains(e.target)){
+      var sel = window.getSelection();
+      if(!sel || sel.isCollapsed) hideToolbar();
+    }
+  });
+
+  document.addEventListener('mouseup', function(){ setTimeout(showToolbarForSelection, 0); });
+  document.addEventListener('touchend', function(){ setTimeout(showToolbarForSelection, 0); });
+  document.addEventListener('keyup', function(e){
+    if(e.shiftKey) setTimeout(showToolbarForSelection, 0);
+  });
+  window.addEventListener('scroll', function(){ hideToolbar(); }, true);
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', restoreAll);
+  } else {
+    restoreAll();
+  }
+})();
 </script>
 </body>
 </html>
