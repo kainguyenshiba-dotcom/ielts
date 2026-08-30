@@ -564,24 +564,6 @@
   .weakness-tip b{ color:var(--moss-deep); }
 
   /* ---------- DASHBOARD (tiến độ học tập) ---------- */
-  .dash-link-card{
-    display:flex; align-items:center; justify-content:space-between;
-    background:var(--moss-deep); color:#EFE9D3; border-radius:10px;
-    padding:14px 20px; margin-bottom:26px; cursor:pointer; border:1px solid var(--moss-deep);
-    transition:transform .12s ease;
-  }
-  .dash-link-card:hover{ transform:translateY(-1px); }
-  .dash-link-card .dl-title{ font-family:'Fraunces',serif; font-size:15.5px; font-weight:600; }
-  .dash-link-card .dl-sub{ font-size:12px; color:#C9CFB8; margin-top:2px; }
-  .dash-link-card .dl-arrow{ font-family:'IBM Plex Mono',monospace; color:var(--ochre); font-size:13px; }
-
-  .dash-back{
-    font-family:'IBM Plex Mono', monospace; font-size:11.5px; letter-spacing:.06em;
-    color:#EFE9D3; background:rgba(0,0,0,.18); border:none; padding:6px 12px;
-    border-radius:6px; cursor:pointer; margin-left:auto;
-  }
-  .dash-back:hover{ background:rgba(0,0,0,.3); }
-
   .stat-cards{
     display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; margin-bottom:30px;
   }
@@ -1466,11 +1448,6 @@
     return d.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric' });
   }
 
-  async function showDashboard(){
-    showPage('p-dashboard');
-    await loadDashboardData();
-  }
-
   async function loadDashboardData(){
     if(!currentUser) return;
     const cardsWrap = document.getElementById('dashStatCards');
@@ -1613,6 +1590,7 @@
     });
     document.getElementById('authOverlay').classList.add('hidden');
     logEvent('login', null);
+    loadDashboardData();
   }
 
   function setAuthMode(mode){
@@ -1714,12 +1692,37 @@
   <h1 class="page-title">Danh sách luyện đọc</h1>
   <p class="page-sub">Chọn một Practice Set, rồi chọn Reading Test và Passage để bắt đầu.</p>
 
-  <div class="dash-link-card" onclick="showDashboard()">
-    <div>
-      <div class="dl-title">📊 Tiến độ luyện tập của bạn</div>
-      <div class="dl-sub">Số đề đã làm, tỉ lệ đúng, lỗi đã mắc &amp; mức cải thiện</div>
+  <div class="dash-section">
+    <h3>📊 Tiến độ của bạn</h3>
+    <div id="dashStatCards" class="stat-cards">
+      <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Số đề đã làm</div></div>
+      <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Tỉ lệ đúng trung bình</div></div>
+      <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Tổng số lỗi đã mắc</div></div>
+      <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Mức cải thiện</div></div>
     </div>
-    <span class="dl-arrow">Xem chi tiết →</span>
+  </div>
+
+  <div class="dash-section">
+    <h3>Hoạt động luyện tập</h3>
+    <div id="dashActivityGrid" class="activity-grid"></div>
+    <div class="activity-legend">
+      <span>Ít</span>
+      <span class="activity-cell" style="width:11px;height:11px;"></span>
+      <span class="activity-cell" data-level="1" style="width:11px;height:11px;"></span>
+      <span class="activity-cell" data-level="2" style="width:11px;height:11px;"></span>
+      <span class="activity-cell" data-level="3" style="width:11px;height:11px;"></span>
+      <span>Nhiều</span>
+    </div>
+  </div>
+
+  <div class="dash-section">
+    <h3>Tiến độ theo từng đề</h3>
+    <div id="dashProgressTable"></div>
+  </div>
+
+  <div class="dash-section">
+    <h3>🤖 Các lỗi thường gặp</h3>
+    <div id="dashErrorBreakdown"></div>
   </div>
 
   <div class="set-card">
@@ -1873,52 +1876,6 @@
 
 </div>
 
-
-</div>
-
-<div id="p-dashboard" class="page-view">
-
-<div class="topbar-list">
-  <span class="mark">WMM</span>
-  <h1>Tiến độ luyện tập</h1>
-  <span class="sub">— hồ sơ học tập của bạn</span>
-  <button class="dash-back" onclick="showPage('p-list')">← Quay lại danh sách</button>
-</div>
-
-<div class="wrap">
-  <h1 class="page-title">Tiến độ của bạn</h1>
-  <p class="page-sub">Tổng hợp toàn bộ các lần làm đề, tính chính xác theo thời gian.</p>
-
-  <div id="dashStatCards" class="stat-cards">
-    <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Số đề đã làm</div></div>
-    <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Tỉ lệ đúng trung bình</div></div>
-    <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Tổng số lỗi đã mắc</div></div>
-    <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Mức cải thiện</div></div>
-  </div>
-
-  <div class="dash-section">
-    <h3>Hoạt động luyện tập</h3>
-    <div id="dashActivityGrid" class="activity-grid"></div>
-    <div class="activity-legend">
-      <span>Ít</span>
-      <span class="activity-cell" style="width:11px;height:11px;"></span>
-      <span class="activity-cell" data-level="1" style="width:11px;height:11px;"></span>
-      <span class="activity-cell" data-level="2" style="width:11px;height:11px;"></span>
-      <span class="activity-cell" data-level="3" style="width:11px;height:11px;"></span>
-      <span>Nhiều</span>
-    </div>
-  </div>
-
-  <div class="dash-section">
-    <h3>Tiến độ theo từng đề</h3>
-    <div id="dashProgressTable"></div>
-  </div>
-
-  <div class="dash-section">
-    <h3>🤖 Các lỗi thường gặp</h3>
-    <div id="dashErrorBreakdown"></div>
-  </div>
-</div>
 
 </div>
 
