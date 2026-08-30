@@ -568,6 +568,78 @@
   }
   .weakness-tip b{ color:var(--moss-deep); }
 
+  /* ---------- DASHBOARD (tiến độ học tập) ---------- */
+  .dash-link-card{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--moss-deep); color:#EFE9D3; border-radius:10px;
+    padding:14px 20px; margin-bottom:26px; cursor:pointer; border:1px solid var(--moss-deep);
+    transition:transform .12s ease;
+  }
+  .dash-link-card:hover{ transform:translateY(-1px); }
+  .dash-link-card .dl-title{ font-family:'Fraunces',serif; font-size:15.5px; font-weight:600; }
+  .dash-link-card .dl-sub{ font-size:12px; color:#C9CFB8; margin-top:2px; }
+  .dash-link-card .dl-arrow{ font-family:'IBM Plex Mono',monospace; color:var(--ochre); font-size:13px; }
+
+  .dash-back{
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; letter-spacing:.06em;
+    color:#EFE9D3; background:rgba(0,0,0,.18); border:none; padding:6px 12px;
+    border-radius:6px; cursor:pointer; margin-left:auto;
+  }
+  .dash-back:hover{ background:rgba(0,0,0,.3); }
+
+  .stat-cards{
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; margin-bottom:30px;
+  }
+  @media (max-width:760px){ .stat-cards{ grid-template-columns:repeat(2, 1fr); } }
+  .stat-card{
+    background:var(--card); border:1px solid var(--line); border-radius:10px;
+    padding:18px 14px; text-align:center;
+  }
+  .stat-card .stat-num{
+    font-family:'Fraunces', serif; font-weight:600; font-size:32px; color:var(--moss-deep); line-height:1;
+  }
+  .stat-card .stat-num.warn{ color:var(--rust); }
+  .stat-card .stat-num.good{ color:var(--moss); }
+  .stat-card .stat-label{ font-size:12.5px; color:var(--ink-soft); margin-top:8px; }
+
+  .dash-section{
+    background:var(--paper); border:1px solid var(--line); border-radius:10px;
+    padding:18px 20px; margin-bottom:22px;
+  }
+  .dash-section h3{
+    font-family:'Fraunces', serif; font-size:16px; margin:0 0 14px 0; color:var(--moss-deep);
+  }
+  .dash-empty{ font-size:13px; color:var(--ink-soft); font-style:italic; }
+
+  /* activity calendar (heatmap-style) */
+  .activity-grid{ display:flex; flex-wrap:wrap; gap:4px; }
+  .activity-cell{
+    width:15px; height:15px; border-radius:3px; background:var(--canvas-deep);
+    border:1px solid var(--line); position:relative; cursor:default;
+  }
+  .activity-cell[data-level="1"]{ background:#C7DCB2; border-color:#B4CE9C; }
+  .activity-cell[data-level="2"]{ background:#8FBB6E; border-color:#7DA95C; }
+  .activity-cell[data-level="3"]{ background:var(--moss); border-color:var(--moss-deep); }
+  .activity-cell:hover::after{
+    content: attr(data-tip);
+    position:absolute; bottom:120%; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:#fff; font-size:11px; padding:4px 8px; border-radius:5px;
+    white-space:nowrap; z-index:10; font-family:'IBM Plex Mono', monospace;
+  }
+  .activity-legend{ display:flex; align-items:center; gap:6px; margin-top:10px; font-size:11px; color:var(--ink-soft); }
+
+  /* progress table (per đề) */
+  .progress-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  .progress-table th{
+    text-align:left; font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--moss); padding:6px 10px; border-bottom:2px solid var(--line);
+  }
+  .progress-table td{ padding:8px 10px; border-bottom:1px solid var(--line); }
+  .progress-table tr:last-child td{ border-bottom:none; }
+  .progress-table .pt-acc-good{ color:var(--moss-deep); font-weight:600; }
+  .progress-table .pt-acc-bad{ color:var(--rust); font-weight:600; }
+  .progress-table .pt-name{ font-weight:500; }
+
   .page-view{ display:none; }
   .page-view.active{ display:block; }
 
@@ -1410,6 +1482,159 @@
     }catch(e){ console.warn('loadWeaknessProfile failed', e); }
   }
 
+  function prettySetId(setId){
+    const m = /^p-set(\w+)-test(\w+)-passage(\w+)$/.exec(setId || '');
+    if(!m) return setId;
+    return `Set ${m[1]} · Test ${m[2]} · Passage ${m[3]}`;
+  }
+
+  function fmtDate(iso){
+    if(!iso) return '';
+    const d = new Date(iso);
+    if(isNaN(d)) return '';
+    return d.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric' });
+  }
+
+  async function showDashboard(){
+    showPage('p-dashboard');
+    await loadDashboardData();
+  }
+
+  async function loadDashboardData(){
+    if(!currentUser) return;
+    const cardsWrap = document.getElementById('dashStatCards');
+    const gridWrap = document.getElementById('dashActivityGrid');
+    const tableWrap = document.getElementById('dashProgressTable');
+    const errWrap = document.getElementById('dashErrorBreakdown');
+    try{
+      const [{ data: attempts, error: attErr }, { data: diagRows, error: diagErr }] = await Promise.all([
+        sb.from('attempts').select('set_id,score,total,created_at').eq('user_id', currentUser.id).order('created_at', { ascending: true }),
+        sb.from('ai_diagnoses').select('diagnosis_full').eq('student_id', currentUser.id)
+      ]);
+      if(attErr) throw attErr;
+      if(diagErr) throw diagErr;
+
+      renderStatCards(cardsWrap, attempts || [], diagRows || []);
+      renderActivityGrid(gridWrap, attempts || []);
+      renderProgressTable(tableWrap, attempts || []);
+      renderErrorBreakdown(errWrap, diagRows || []);
+    }catch(e){
+      console.warn('loadDashboardData failed', e);
+      if(cardsWrap) cardsWrap.innerHTML = '<div class="dash-empty">Không tải được dữ liệu tiến độ. Thử lại sau.</div>';
+    }
+  }
+
+  function renderStatCards(wrap, attempts, diagRows){
+    if(!wrap) return;
+    const totalAttempts = attempts.length;
+    const totalQuestions = attempts.reduce((s,a)=> s + (a.total || 0), 0);
+    const totalCorrect = attempts.reduce((s,a)=> s + (a.score || 0), 0);
+    const accuracy = totalQuestions ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+    const totalErrors = Math.max(0, totalQuestions - totalCorrect);
+
+    let improvementLabel = 'Chưa đủ dữ liệu';
+    let improvementClass = '';
+    if(totalAttempts >= 2){
+      const half = Math.max(1, Math.floor(totalAttempts / 2));
+      const firstGroup = attempts.slice(0, half);
+      const lastGroup = attempts.slice(totalAttempts - half);
+      const accOf = g => {
+        const t = g.reduce((s,a)=> s + (a.total || 0), 0);
+        const c = g.reduce((s,a)=> s + (a.score || 0), 0);
+        return t ? (c / t) * 100 : 0;
+      };
+      const diff = Math.round(accOf(lastGroup) - accOf(firstGroup));
+      improvementLabel = (diff > 0 ? '+' : '') + diff + '%';
+      improvementClass = diff > 0 ? 'good' : (diff < 0 ? 'warn' : '');
+    }
+
+    const cards = [
+      { num: totalAttempts, label: 'Số đề đã làm', cls: '' },
+      { num: totalAttempts ? accuracy + '%' : '—', label: 'Tỉ lệ đúng trung bình', cls: accuracy >= 70 ? 'good' : (totalAttempts ? 'warn' : '') },
+      { num: totalAttempts ? totalErrors : '—', label: 'Tổng số lỗi đã mắc', cls: totalErrors ? 'warn' : '' },
+      { num: improvementLabel, label: 'Mức cải thiện', cls: improvementClass }
+    ];
+    wrap.innerHTML = cards.map(c => `
+      <div class="stat-card">
+        <div class="stat-num ${c.cls}">${c.num}</div>
+        <div class="stat-label">${c.label}</div>
+      </div>
+    `).join('');
+  }
+
+  function renderActivityGrid(wrap, attempts){
+    if(!wrap) return;
+    const counts = {};
+    attempts.forEach(a=>{
+      if(!a.created_at) return;
+      const key = a.created_at.slice(0,10);
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    const days = 84; // ~12 tuần gần nhất
+    const today = new Date();
+    let html = '';
+    for(let i = days - 1; i >= 0; i--){
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0,10);
+      const c = counts[key] || 0;
+      const level = c === 0 ? 0 : (c === 1 ? 1 : (c <= 3 ? 2 : 3));
+      html += `<div class="activity-cell" data-level="${level}" data-tip="${key}${c ? ' · ' + c + ' lần làm' : ''}"></div>`;
+    }
+    wrap.innerHTML = html;
+  }
+
+  function renderProgressTable(wrap, attempts){
+    if(!wrap) return;
+    if(!attempts.length){
+      wrap.innerHTML = '<div class="dash-empty">Chưa có dữ liệu — hãy làm thử một đề để bắt đầu theo dõi tiến độ nhé.</div>';
+      return;
+    }
+    const bySet = {};
+    attempts.forEach(a=>{
+      if(!bySet[a.set_id]) bySet[a.set_id] = [];
+      bySet[a.set_id].push(a);
+    });
+    const rows = Object.entries(bySet).map(([setId, list])=>{
+      const t = list.reduce((s,a)=> s + (a.total||0), 0);
+      const c = list.reduce((s,a)=> s + (a.score||0), 0);
+      const acc = t ? Math.round((c/t)*100) : 0;
+      const last = list[list.length - 1];
+      const accClass = acc >= 70 ? 'pt-acc-good' : 'pt-acc-bad';
+      return `<tr>
+        <td class="pt-name">${prettySetId(setId)}</td>
+        <td>${list.length}</td>
+        <td>${last.score}/${last.total}</td>
+        <td class="${accClass}">${acc}%</td>
+        <td>${fmtDate(last.created_at)}</td>
+      </tr>`;
+    }).join('');
+    wrap.innerHTML = `<table class="progress-table">
+      <thead><tr>
+        <th>Đề</th><th>Số lần làm</th><th>Điểm gần nhất</th><th>Tỉ lệ đúng TB</th><th>Lần cuối làm</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+  }
+
+  function renderErrorBreakdown(wrap, diagRows){
+    if(!wrap) return;
+    const counts = {};
+    diagRows.forEach(d=>{
+      const perQ = (d.diagnosis_full && d.diagnosis_full.per_question) || [];
+      perQ.forEach(q=>{
+        if(!q.error_type) return;
+        counts[q.error_type] = (counts[q.error_type] || 0) + 1;
+      });
+    });
+    const entries = Object.entries(counts).sort((a,b)=> b[1]-a[1]);
+    if(!entries.length){
+      wrap.innerHTML = '<div class="dash-empty">🎉 Chưa phát hiện lỗi note-taking nào — cứ tiếp tục phát huy nhé!</div>';
+      return;
+    }
+    wrap.innerHTML = buildWeaknessTagsAndTips(entries);
+  }
+
   async function onLoggedIn(user){
     currentUser = user;
     await sb.from('profiles').upsert({
@@ -1518,6 +1743,14 @@
 <div class="wrap">
   <h1 class="page-title">Danh sách luyện đọc</h1>
   <p class="page-sub">Chọn một Practice Set, rồi chọn Reading Test và Passage để bắt đầu.</p>
+
+  <div class="dash-link-card" onclick="showDashboard()">
+    <div>
+      <div class="dl-title">📊 Tiến độ luyện tập của bạn</div>
+      <div class="dl-sub">Số đề đã làm, tỉ lệ đúng, lỗi đã mắc &amp; mức cải thiện</div>
+    </div>
+    <span class="dl-arrow">Xem chi tiết →</span>
+  </div>
 
   <div id="weaknessProfilePanel" class="weakness-profile-panel" style="display:none;"></div>
 
@@ -1672,6 +1905,52 @@
 
 </div>
 
+
+</div>
+
+<div id="p-dashboard" class="page-view">
+
+<div class="topbar-list">
+  <span class="mark">WMM</span>
+  <h1>Tiến độ luyện tập</h1>
+  <span class="sub">— hồ sơ học tập của bạn</span>
+  <button class="dash-back" onclick="showPage('p-list')">← Quay lại danh sách</button>
+</div>
+
+<div class="wrap">
+  <h1 class="page-title">Tiến độ của bạn</h1>
+  <p class="page-sub">Tổng hợp toàn bộ các lần làm đề, tính chính xác theo thời gian.</p>
+
+  <div id="dashStatCards" class="stat-cards">
+    <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Số đề đã làm</div></div>
+    <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Tỉ lệ đúng trung bình</div></div>
+    <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Tổng số lỗi đã mắc</div></div>
+    <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Mức cải thiện</div></div>
+  </div>
+
+  <div class="dash-section">
+    <h3>Hoạt động luyện tập</h3>
+    <div id="dashActivityGrid" class="activity-grid"></div>
+    <div class="activity-legend">
+      <span>Ít</span>
+      <span class="activity-cell" style="width:11px;height:11px;"></span>
+      <span class="activity-cell" data-level="1" style="width:11px;height:11px;"></span>
+      <span class="activity-cell" data-level="2" style="width:11px;height:11px;"></span>
+      <span class="activity-cell" data-level="3" style="width:11px;height:11px;"></span>
+      <span>Nhiều</span>
+    </div>
+  </div>
+
+  <div class="dash-section">
+    <h3>Tiến độ theo từng đề</h3>
+    <div id="dashProgressTable"></div>
+  </div>
+
+  <div class="dash-section">
+    <h3>🤖 Các lỗi thường gặp</h3>
+    <div id="dashErrorBreakdown"></div>
+  </div>
+</div>
 
 </div>
 
