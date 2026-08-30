@@ -551,12 +551,7 @@
     .review-two-col{ flex-direction:column; }
   }
 
-  /* ---------- WEAKNESS PROFILE (trang danh sách) ---------- */
-  .weakness-profile-panel{
-    background:#EEF3E6; border:1px solid var(--moss); border-radius:10px;
-    padding:16px 18px; margin-bottom:26px;
-  }
-  .weakness-profile-panel h3{ margin:0 0 10px 0; font-family:'Fraunces',serif; font-size:16px; color:var(--moss-deep); }
+  /* ---------- WEAKNESS TAGS/TIPS (dùng trong dashboard & review modal) ---------- */
   .weakness-tags{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
   .weakness-tag{
     font-family:'IBM Plex Mono', monospace; font-size:11.5px; padding:5px 12px;
@@ -1458,30 +1453,6 @@
     return `<div class="review-summary"><h4>🤖 Điểm yếu lần này</h4>${buildWeaknessTagsAndTips(entries)}</div>`;
   }
 
-  async function loadWeaknessProfile(){
-    const panel = document.getElementById('weaknessProfilePanel');
-    if(!panel || !currentUser) return;
-    try{
-      const { data } = await sb.from('ai_diagnoses').select('diagnosis_full').eq('student_id', currentUser.id);
-      const counts = {};
-      (data || []).forEach(d=>{
-        const perQ = (d.diagnosis_full && d.diagnosis_full.per_question) || [];
-        perQ.forEach(q=>{
-          if(!q.error_type) return;
-          counts[q.error_type] = (counts[q.error_type] || 0) + 1;
-        });
-      });
-      const entries = Object.entries(counts).sort((a,b) => b[1] - a[1]);
-      if(!entries.length){
-        panel.style.display = 'none';
-        panel.innerHTML = '';
-        return;
-      }
-      panel.style.display = 'block';
-      panel.innerHTML = '<h3>🤖 Hồ sơ điểm yếu AI</h3>' + buildWeaknessTagsAndTips(entries);
-    }catch(e){ console.warn('loadWeaknessProfile failed', e); }
-  }
-
   function prettySetId(setId){
     const m = /^p-set(\w+)-test(\w+)-passage(\w+)$/.exec(setId || '');
     if(!m) return setId;
@@ -1642,7 +1613,6 @@
     });
     document.getElementById('authOverlay').classList.add('hidden');
     logEvent('login', null);
-    loadWeaknessProfile();
   }
 
   function setAuthMode(mode){
@@ -1751,8 +1721,6 @@
     </div>
     <span class="dl-arrow">Xem chi tiết →</span>
   </div>
-
-  <div id="weaknessProfilePanel" class="weakness-profile-panel" style="display:none;"></div>
 
   <div class="set-card">
     <div class="set-header">
