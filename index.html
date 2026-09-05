@@ -98,6 +98,8 @@
     white-space:nowrap;
   }
   .exam-timer-value{ color:var(--ochre); font-weight:600; letter-spacing:.03em; }
+  .exam-timer-value.exam-timer-danger{ color:#E05B3E; animation: examTimerPulse 1s infinite; }
+  @keyframes examTimerPulse{ 0%,100%{opacity:1;} 50%{opacity:.45;} }
   .exam-status-count .exam-answered-value{ color:var(--ochre); font-weight:600; }
   body.mode-explain .exam-status-bar{ display:none; }
 
@@ -776,8 +778,39 @@
   let currentUser = null;
 
   // ===== Đếm thời gian làm bài (bắt đầu khi chọn "Làm bài" từ modal) =====
+  // Giới hạn thời gian theo từng passage: 15p/passage 1, 20p/passage 2, 25p/passage 3
+  const PASSAGE_TIME_LIMITS_SEC = { 1: 15*60, 2: 20*60, 3: 25*60 };
+  function getPassageTimeLimitSeconds(setId){
+    if(!setId) return null;
+    const m = setId.match(/passage(\d)/);
+    if(!m) return null;
+    return PASSAGE_TIME_LIMITS_SEC[m[1]] || null;
+  }
+  // Ánh xạ setId -> tên hàm gradeAll tương ứng, dùng để tự động nộp bài khi hết giờ
+  const GRADE_FN_BY_SET_ID = {
+    'p-set20-test1-passage1': 'gradeAll',
+    'p-set20-test1-passage2': 'gradeAll2',
+    'p-set20-test1-passage3': 'gradeAll3',
+    'p-set20-test2-passage1': 'gradeAll4',
+    'p-set20-test2-passage2': 'gradeAll5',
+    'p-set20-test2-passage3': 'gradeAll6',
+    'p-set20-test3-passage1': 'gradeAll7',
+    'p-set20-test3-passage2': 'gradeAll8',
+    'p-set20-test3-passage3': 'gradeAll9',
+    'p-set20-test4-passage1': 'gradeAll10',
+    'p-set20-test4-passage2': 'gradeAll11',
+    'p-set20-test4-passage3': 'gradeAll12',
+    'p-set19-test1-passage1': 'gradeAll13',
+    'p-set19-test1-passage2': 'gradeAll14',
+    'p-set19-test1-passage3': 'gradeAll15',
+    'p-set19-test2-passage1': 'gradeAll16',
+    'p-set19-test2-passage2': 'gradeAll17',
+    'p-set19-test2-passage3': 'gradeAll18'
+  };
+  const autoSubmittedSets = new Set();
   function startExamTimer(setId){
     if(!setId) return;
+    autoSubmittedSets.delete(setId);
     try{ sessionStorage.setItem('examStart_' + setId, String(Date.now())); }catch(e){}
   }
   function getExamDurationSeconds(setId){
@@ -836,13 +869,38 @@
     bar.querySelector('.exam-answered-value').textContent = answered;
     bar.querySelector('.exam-total-value').textContent = items.length;
     let dur = getExamDurationSeconds(setId);
+    const timerEl = bar.querySelector('.exam-timer-value');
     if(dur === null){
       try{
         const finalRaw = sessionStorage.getItem('examFinal_' + setId);
         dur = finalRaw ? parseInt(finalRaw, 10) : null;
       }catch(e){}
+      timerEl.classList.remove('exam-timer-danger');
+      timerEl.textContent = (dur === null) ? '--:--' : formatMMSS(dur);
+      return;
     }
-    bar.querySelector('.exam-timer-value').textContent = (dur === null) ? '--:--' : formatMMSS(dur);
+    const limit = getPassageTimeLimitSeconds(setId);
+    if(limit === null){
+      timerEl.classList.remove('exam-timer-danger');
+      timerEl.textContent = formatMMSS(dur);
+      return;
+    }
+    const remaining = limit - dur;
+    if(remaining <= 0){
+      timerEl.textContent = '00:00';
+      timerEl.classList.add('exam-timer-danger');
+      if(!autoSubmittedSets.has(setId)){
+        autoSubmittedSets.add(setId);
+        const fnName = GRADE_FN_BY_SET_ID[setId];
+        if(fnName && typeof window[fnName] === 'function'){
+          window[fnName](true);
+          alert('Đã hết thời gian làm bài! Bài của bạn đã được tự động nộp.');
+        }
+      }
+    } else {
+      timerEl.textContent = formatMMSS(remaining);
+      timerEl.classList.toggle('exam-timer-danger', remaining <= 60);
+    }
   }
 
   async function logEvent(eventType, setId, meta){
@@ -7877,13 +7935,13 @@ document.querySelectorAll('.multi').forEach(group=>{
   });
 });
 
-function gradeAll(){
+function gradeAll(force){
   const inExam = document.body.classList.contains('mode-exam');
-  if(inExam && !allAnswered()){
+  if(inExam && !force && !allAnswered()){
     alert('Bạn cần trả lời hết 13 câu trước khi nộp bài.');
     return;
   }
-  if(inExam){
+  if(inExam && !force){
     const notesCheck = checkRequiredNotesFilled('p-set20-test1-passage1');
     if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
   }
@@ -7949,11 +8007,11 @@ function toggleHL2(){
   }
 }
 
-function gradeAll2(){
+function gradeAll2(force){
   const inExam = document.body.classList.contains('mode-exam');
   const items = document.querySelectorAll('#p-set20-test1-passage2 .q-item');
 
-  if(inExam){
+  if(inExam && !force){
     let ok = true;
     items.forEach(item=>{
       const radios = item.querySelectorAll('input[type=radio]');
@@ -7966,7 +8024,7 @@ function gradeAll2(){
       return;
     }
   }
-  if(inExam){
+  if(inExam && !force){
     const notesCheck = checkRequiredNotesFilled('p-set20-test1-passage2');
     if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
   }
@@ -8032,11 +8090,11 @@ function toggleHL3(){
   }
 }
 
-function gradeAll3(){
+function gradeAll3(force){
   const inExam = document.body.classList.contains('mode-exam');
   const items = document.querySelectorAll('#p-set20-test1-passage3 .q-item');
 
-  if(inExam){
+  if(inExam && !force){
     let ok = true;
     items.forEach(item=>{
       const radios = item.querySelectorAll('input[type=radio]');
@@ -8049,7 +8107,7 @@ function gradeAll3(){
       return;
     }
   }
-  if(inExam){
+  if(inExam && !force){
     const notesCheck = checkRequiredNotesFilled('p-set20-test1-passage3');
     if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
   }
@@ -8115,11 +8173,11 @@ function toggleHL4(){
   }
 }
 
-function gradeAll4(){
+function gradeAll4(force){
   const inExam = document.body.classList.contains('mode-exam');
   const items = document.querySelectorAll('#p-set20-test2-passage1 .q-item');
 
-  if(inExam){
+  if(inExam && !force){
     let ok = true;
     items.forEach(item=>{
       const radios = item.querySelectorAll('input[type=radio]');
@@ -8132,7 +8190,7 @@ function gradeAll4(){
       return;
     }
   }
-  if(inExam){
+  if(inExam && !force){
     const notesCheck = checkRequiredNotesFilled('p-set20-test2-passage1');
     if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
   }
@@ -8198,11 +8256,11 @@ function toggleHL5(){
   }
 }
 
-function gradeAll5(){
+function gradeAll5(force){
   const inExam = document.body.classList.contains('mode-exam');
   const items = document.querySelectorAll('#p-set20-test2-passage2 .q-item');
 
-  if(inExam){
+  if(inExam && !force){
     let ok = true;
     items.forEach(item=>{
       const radios = item.querySelectorAll('input[type=radio]');
@@ -8217,7 +8275,7 @@ function gradeAll5(){
       return;
     }
   }
-  if(inExam){
+  if(inExam && !force){
     const notesCheck = checkRequiredNotesFilled('p-set20-test2-passage2');
     if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
   }
@@ -8305,11 +8363,11 @@ function toggleHL6(){
   }
 }
 
-function gradeAll6(){
+function gradeAll6(force){
   const inExam = document.body.classList.contains('mode-exam');
   const items = document.querySelectorAll('#p-set20-test2-passage3 .q-item');
 
-  if(inExam){
+  if(inExam && !force){
     let ok = true;
     items.forEach(item=>{
       const radios = item.querySelectorAll('input[type=radio]');
@@ -8322,7 +8380,7 @@ function gradeAll6(){
       return;
     }
   }
-  if(inExam){
+  if(inExam && !force){
     const notesCheck = checkRequiredNotesFilled('p-set20-test2-passage3');
     if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
   }
@@ -8388,11 +8446,11 @@ function toggleHL7(){
   }
 }
 
-function gradeAll7(){
+function gradeAll7(force){
   const inExam = document.body.classList.contains('mode-exam');
   const items = document.querySelectorAll('#p-set20-test3-passage1 .q-item');
 
-  if(inExam){
+  if(inExam && !force){
     let ok = true;
     items.forEach(item=>{
       const radios = item.querySelectorAll('input[type=radio]');
@@ -8405,7 +8463,7 @@ function gradeAll7(){
       return;
     }
   }
-  if(inExam){
+  if(inExam && !force){
     const notesCheck = checkRequiredNotesFilled('p-set20-test3-passage1');
     if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
   }
@@ -8471,11 +8529,11 @@ function toggleHL8(){
   }
 }
 
-function gradeAll8(){
+function gradeAll8(force){
   const inExam = document.body.classList.contains('mode-exam');
   const items = document.querySelectorAll('#p-set20-test3-passage2 .q-item');
 
-  if(inExam){
+  if(inExam && !force){
     let ok = true;
     items.forEach(item=>{
       const radios = item.querySelectorAll('input[type=radio]');
@@ -8490,7 +8548,7 @@ function gradeAll8(){
       return;
     }
   }
-  if(inExam){
+  if(inExam && !force){
     const notesCheck = checkRequiredNotesFilled('p-set20-test3-passage2');
     if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
   }
@@ -8576,11 +8634,11 @@ function toggleHL9(){
   }
 }
 
-function gradeAll9(){
+function gradeAll9(force){
   const inExam = document.body.classList.contains('mode-exam');
   const items = document.querySelectorAll('#p-set20-test3-passage3 .q-item');
 
-  if(inExam){
+  if(inExam && !force){
     let ok = true;
     items.forEach(item=>{
       const radios = item.querySelectorAll('input[type=radio]');
@@ -8593,7 +8651,7 @@ function gradeAll9(){
       return;
     }
   }
-  if(inExam){
+  if(inExam && !force){
     const notesCheck = checkRequiredNotesFilled('p-set20-test3-passage3');
     if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
   }
@@ -8659,11 +8717,11 @@ function toggleHL10(){
   }
 }
 
-function gradeAll10(){
+function gradeAll10(force){
   const inExam = document.body.classList.contains('mode-exam');
   const items = document.querySelectorAll('#p-set20-test4-passage1 .q-item');
 
-  if(inExam){
+  if(inExam && !force){
     let ok = true;
     items.forEach(item=>{
       const radios = item.querySelectorAll('input[type=radio]');
@@ -8676,7 +8734,7 @@ function gradeAll10(){
       return;
     }
   }
-  if(inExam){
+  if(inExam && !force){
     const notesCheck = checkRequiredNotesFilled('p-set20-test4-passage1');
     if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
   }
@@ -8742,11 +8800,11 @@ function toggleHL11(){
   }
 }
 
-function gradeAll11(){
+function gradeAll11(force){
   const inExam = document.body.classList.contains('mode-exam');
   const items = document.querySelectorAll('#p-set20-test4-passage2 .q-item');
 
-  if(inExam){
+  if(inExam && !force){
     let ok = true;
     items.forEach(item=>{
       const radios = item.querySelectorAll('input[type=radio]');
@@ -8759,7 +8817,7 @@ function gradeAll11(){
       return;
     }
   }
-  if(inExam){
+  if(inExam && !force){
     const notesCheck = checkRequiredNotesFilled('p-set20-test4-passage2');
     if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
   }
@@ -8825,11 +8883,11 @@ function toggleHL12(){
   }
 }
 
-function gradeAll12(){
+function gradeAll12(force){
   const inExam = document.body.classList.contains('mode-exam');
   const items = document.querySelectorAll('#p-set20-test4-passage3 .q-item');
 
-  if(inExam){
+  if(inExam && !force){
     let ok = true;
     items.forEach(item=>{
       const radios = item.querySelectorAll('input[type=radio]');
@@ -8842,7 +8900,7 @@ function gradeAll12(){
       return;
     }
   }
-  if(inExam){
+  if(inExam && !force){
     const notesCheck = checkRequiredNotesFilled('p-set20-test4-passage3');
     if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
   }
@@ -8908,11 +8966,11 @@ function toggleHL13(){
   }
 }
 
-function gradeAll13(){
+function gradeAll13(force){
   const inExam = document.body.classList.contains('mode-exam');
   const items = document.querySelectorAll('#p-set19-test1-passage1 .q-item');
 
-  if(inExam){
+  if(inExam && !force){
     let ok = true;
     items.forEach(item=>{
       const radios = item.querySelectorAll('input[type=radio]');
@@ -8925,7 +8983,7 @@ function gradeAll13(){
       return;
     }
   }
-  if(inExam){
+  if(inExam && !force){
     const notesCheck = checkRequiredNotesFilled('p-set19-test1-passage1');
     if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
   }
@@ -8991,11 +9049,11 @@ function toggleHL14(){
   }
 }
 
-function gradeAll14(){
+function gradeAll14(force){
   const inExam = document.body.classList.contains('mode-exam');
   const items = document.querySelectorAll('#p-set19-test1-passage2 .q-item');
 
-  if(inExam){
+  if(inExam && !force){
     let ok = true;
     items.forEach(item=>{
       const radios = item.querySelectorAll('input[type=radio]');
@@ -9010,7 +9068,7 @@ function gradeAll14(){
       return;
     }
   }
-  if(inExam){
+  if(inExam && !force){
     const notesCheck = checkRequiredNotesFilled('p-set19-test1-passage2');
     if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
   }
@@ -9094,11 +9152,11 @@ function toggleHL15(){
   }
 }
 
-function gradeAll15(){
+function gradeAll15(force){
   const inExam = document.body.classList.contains('mode-exam');
   const items = document.querySelectorAll('#p-set19-test1-passage3 .q-item');
 
-  if(inExam){
+  if(inExam && !force){
     let ok = true;
     items.forEach(item=>{
       const radios = item.querySelectorAll('input[type=radio]');
@@ -9111,7 +9169,7 @@ function gradeAll15(){
       return;
     }
   }
-  if(inExam){
+  if(inExam && !force){
     const notesCheck = checkRequiredNotesFilled('p-set19-test1-passage3');
     if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
   }
@@ -9177,11 +9235,11 @@ function toggleHL16(){
   }
 }
 
-function gradeAll16(){
+function gradeAll16(force){
   const inExam = document.body.classList.contains('mode-exam');
   const items = document.querySelectorAll('#p-set19-test2-passage1 .q-item');
 
-  if(inExam){
+  if(inExam && !force){
     let ok = true;
     items.forEach(item=>{
       const radios = item.querySelectorAll('input[type=radio]');
@@ -9194,7 +9252,7 @@ function gradeAll16(){
       return;
     }
   }
-  if(inExam){
+  if(inExam && !force){
     const notesCheck = checkRequiredNotesFilled('p-set19-test2-passage1');
     if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
   }
@@ -9260,11 +9318,11 @@ function toggleHL17(){
   }
 }
 
-function gradeAll17(){
+function gradeAll17(force){
   const inExam = document.body.classList.contains('mode-exam');
   const items = document.querySelectorAll('#p-set19-test2-passage2 .q-item');
 
-  if(inExam){
+  if(inExam && !force){
     let ok = true;
     items.forEach(item=>{
       const radios = item.querySelectorAll('input[type=radio]');
@@ -9279,7 +9337,7 @@ function gradeAll17(){
       return;
     }
   }
-  if(inExam){
+  if(inExam && !force){
     const notesCheck = checkRequiredNotesFilled('p-set19-test2-passage2');
     if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
   }
@@ -9365,11 +9423,11 @@ function toggleHL18(){
   }
 }
 
-function gradeAll18(){
+function gradeAll18(force){
   const inExam = document.body.classList.contains('mode-exam');
   const items = document.querySelectorAll('#p-set19-test2-passage3 .q-item');
 
-  if(inExam){
+  if(inExam && !force){
     let ok = true;
     items.forEach(item=>{
       const radios = item.querySelectorAll('input[type=radio]');
@@ -9382,7 +9440,7 @@ function gradeAll18(){
       return;
     }
   }
-  if(inExam){
+  if(inExam && !force){
     const notesCheck = checkRequiredNotesFilled('p-set19-test2-passage3');
     if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
   }
