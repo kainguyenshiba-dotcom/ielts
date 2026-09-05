@@ -805,7 +805,8 @@
     'p-set19-test1-passage3': 'gradeAll15',
     'p-set19-test2-passage1': 'gradeAll16',
     'p-set19-test2-passage2': 'gradeAll17',
-    'p-set19-test2-passage3': 'gradeAll18'
+    'p-set19-test2-passage3': 'gradeAll18',
+    'p-set19-test3-passage1': 'gradeAll19'
   };
   const autoSubmittedSets = new Set();
   function startExamTimer(setId){
@@ -844,7 +845,8 @@
     'p-set20-test3-passage1','p-set20-test3-passage2','p-set20-test3-passage3',
     'p-set20-test4-passage1','p-set20-test4-passage2','p-set20-test4-passage3',
     'p-set19-test1-passage1','p-set19-test1-passage2','p-set19-test1-passage3',
-    'p-set19-test2-passage1','p-set19-test2-passage2','p-set19-test2-passage3'
+    'p-set19-test2-passage1','p-set19-test2-passage2','p-set19-test2-passage3',
+    'p-set19-test3-passage1'
   ];
   function injectExamStatusBar(setId){
     const container = document.getElementById(setId);
@@ -1956,6 +1958,19 @@
           <div class="passage-row" onclick="togglePassageInfo(this)">
             <span class="p-name">Passage 3 — An inquiry into the existence of the gifted child <span class="badge ready">Sẵn sàng</span></span>
             <span class="p-arrow" onclick="event.stopPropagation(); openModeModal('p-set19-test2-passage3', 'An inquiry into the existence of the gifted child'); return false;">Vào làm →</span>
+          </div>
+          <div class="passage-info"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="test-block">
+      <div class="test-title">Reading Test 3</div>
+      <div class="passage-list">
+        <div class="passage-item enabled" data-set-id="p-set19-test3-passage1">
+          <div class="passage-row" onclick="togglePassageInfo(this)">
+            <span class="p-name">Passage 1 — Archaeologists discover evidence of prehistoric island settlers <span class="badge ready">Sẵn sàng</span></span>
+            <span class="p-arrow" onclick="event.stopPropagation(); openModeModal('p-set19-test3-passage1', 'Passage 1 — Archaeologists discover evidence of prehistoric island settlers'); return false;">Vào làm →</span>
           </div>
           <div class="passage-info"></div>
         </div>
@@ -7601,6 +7616,290 @@
 
 </div>
 
+<div id="p-set19-test3-passage1" class="page-view">
+
+
+<div class="topbar">
+  <div class="brand">
+    <a href="#" onclick="showPage('p-list'); return false;" style="color:#EFE9D3; text-decoration:none; font-family:'IBM Plex Mono',monospace; font-size:12px; margin-right:14px; opacity:.8;">← Danh sách</a>
+    <span class="mark">WMM</span>
+    <h1>The Writer's Mind Method</h1>
+    <span class="sub">— Set 19 · Reading Test 3 · Passage 1: Archaeologists discover evidence of prehistoric island settlers</span>
+  </div>
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="exam" onclick="setMode19('exam')">📝 Làm bài</button>
+    <button class="mode-tab locked" id="explainTab19" data-mode="explain" onclick="setMode19('explain')">📖 Coi giải thích <span class="lock-ic">🔒</span></button>
+  </div>
+  <div class="toggle-wrap" id="noteToggleWrap19">
+    <span>Ghi chú</span>
+    <div class="switch" id="hlSwitch19" onclick="toggleHL19()"></div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- ================= PASSAGE ================= -->
+  <div class="passage-panel">
+    <span class="passage-kicker">Reading Passage · Archaeology &amp; Prehistory</span>
+    <h1 class="passage-title">Archaeologists discover evidence of prehistoric island settlers</h1>
+
+    <div class="legend">
+      <span><span class="chip c-topic hl">&nbsp;&nbsp;</span> câu trọng tâm</span>
+      <span><span class="chip c-clue hl">&nbsp;&nbsp;</span> đầu mối trả lời câu hỏi</span>
+      <span class="note-hint">Bấm "Ghi chú" ở mỗi đoạn để xem tư duy đọc từng bước</span>
+    </div>
+
+    <!-- Đoạn 1 -->
+    <div class="para-block">
+      <div class="para-label">ĐOẠN 1 <button class="note-btn" onclick="toggleNote(this,'s19t3p1n1')">Ghi chú</button></div>
+      <p class="para-text">In early April 2019, Dr Ceri Shipton and his colleagues from Australian National University <span class="hl hl-clue">became the first archaeologists to explore Obi,</span> one of many tropical islands in Indonesia's Maluku Utara province. <span class="hl hl-topic">The research team's discoveries suggest that the prehistoric people who lived on Obi were adept on both land and sea, hunting in the dense rainforest, foraging on the seashore, and possibly even voyaging between islands.</span></p>
+      <div class="margin-note" id="s19t3p1n1"><div class="margin-note-inner">
+        <div class="row"><b>Ý chính:</b> nhóm nghiên cứu phát hiện người tiền sử trên Obi giỏi cả trên cạn lẫn trên biển</div>
+        <div class="row"><b>Bổ trợ:</b> câu đầu xác nhận Shipton là nhóm khảo cổ ĐẦU TIÊN khám phá Obi — chưa từng có ai nghiên cứu ở đây trước đó</div>
+        <div class="row">→ Câu 1: <span class="ans-line">FALSE</span></div>
+      </div></div>
+    </div>
+
+    <!-- Đoạn 2 -->
+    <div class="para-block">
+      <div class="para-label">ĐOẠN 2 <button class="note-btn" onclick="toggleNote(this,'s19t3p1n2')">Ghi chú</button></div>
+      <p class="para-text"><span class="hl hl-topic">The excavations were part of a project to learn more about how people first dispersed from mainland Asia, through the Indonesian archipelago and into the prehistoric continent that once connected Australia and New Guinea.</span> The team's earlier research suggested that the northernmost islands in the group, known as the Wallacean islands, including Obi, would have offered the easiest migration route. It also seemed likely that these islands were crucial 'stepping stones' on humans' island-hopping voyages through this region millennia ago. But to support this idea, they needed archaeological evidence for humans living in this remote area in the ancient past. So, they travelled to Obi to look for sites that might reveal evidence of early occupation.</p>
+      <div class="margin-note" id="s19t3p1n2"><div class="margin-note-inner">
+        <div class="row"><b>Ý chính:</b> cuộc khai quật nằm trong dự án nghiên cứu đường di cư của con người từ châu Á</div>
+        <div class="row">Đoạn này chỉ đặt bối cảnh nghiên cứu — không sinh thêm đáp án mới.</div>
+      </div></div>
+    </div>
+
+    <!-- Đoạn 3 -->
+    <div class="para-block">
+      <div class="para-label">ĐOẠN 3 <button class="note-btn" onclick="toggleNote(this,'s19t3p1n3')">Ghi chú</button></div>
+      <p class="para-text">Just inland from the village of Kelo on Obi's northern coast, Shipton and his colleagues <span class="hl hl-clue">found two caves</span> containing prehistoric rock shelters that were suitable for excavation. With the permission and help of the local people of Kelo, they dug a small test excavation in each shelter. <span class="hl hl-topic">There they found numerous artefacts, including fragments of axes, some dating to about 14,000 years ago.</span> The earliest axes at Kelo were made using clam shells. <span class="hl hl-clue">Axes made from clam shells from roughly the same time had also previously been found elsewhere in this region, including on the nearby island of Gebe to the northeast.</span> As on Gebe, it is highly likely that Obi's axes were used in the construction of canoes, thus allowing these early peoples to maintain connections between communities on neighbouring islands.</p>
+      <div class="margin-note" id="s19t3p1n3"><div class="margin-note-inner">
+        <div class="row"><b>Ý chính:</b> tìm thấy nhiều đồ tạo tác trong hang, gồm mảnh rìu ~14,000 năm tuổi</div>
+        <div class="row"><b>Bổ trợ:</b> rìu vỏ sò cùng thời kỳ TỪNG được tìm thấy ở đảo Gebe gần đó trước đây → không phải lần đầu tiên trong khu vực</div>
+        <div class="row">→ Câu 2: <span class="ans-line">FALSE</span> &nbsp; → Câu 8: <span class="ans-line">caves</span></div>
+      </div></div>
+    </div>
+
+    <!-- Đoạn 4 -->
+    <div class="para-block">
+      <div class="para-label">ĐOẠN 4 <button class="note-btn" onclick="toggleNote(this,'s19t3p1n4')">Ghi chú</button></div>
+      <p class="para-text"><span class="hl hl-topic">The oldest cultural layers from the Kelo site provided the team with the earliest record for human occupation on Obi, dating back around 18,000 years.</span> At this time the climate was drier and colder than today, and the island's dense rainforests would likely have been much less impenetrable than they are now. <span class="hl hl-clue">Sea levels were about 120 metres lower, meaning Obi was a much larger island, encompassing what is today the separate island of Bisa, as well as several other small islands nearby.</span></p>
+      <div class="margin-note" id="s19t3p1n4"><div class="margin-note-inner">
+        <div class="row"><b>Ý chính:</b> bằng chứng con người sớm nhất trên Obi, khoảng 18,000 năm trước</div>
+        <div class="row"><b>Bổ trợ:</b> mực nước biển thấp hơn 120m khi đó → Obi từng LỚN HƠN NHIỀU, bao gồm cả đảo Bisa ngày nay</div>
+        <div class="row">→ Câu 3: <span class="ans-line">TRUE</span> (Obi hiện tại nhỏ hơn 18,000 năm trước)</div>
+      </div></div>
+    </div>
+
+    <!-- Đoạn 5 -->
+    <div class="para-block">
+      <div class="para-label">ĐOẠN 5 <button class="note-btn" onclick="toggleNote(this,'s19t3p1n5')">Ghi chú</button></div>
+      <p class="para-text"><span class="hl hl-topic">Roughly 11,700 years ago, as the most recent ice age ended, the climate became significantly warmer and wetter, no doubt making Obi's jungle much thicker.</span> <span class="hl hl-clue">According to the researchers, it is no coincidence that around this time the first axes crafted from stone rather than sea shells appear,</span> likely in response to their heavy-duty use for clearing and modification of the increasingly dense rainforest. While stone takes about twice as long to grind into an axe compared to shell, the harder material keeps its sharp edge for longer.</p>
+      <div class="margin-note" id="s19t3p1n5"><div class="margin-note-inner">
+        <div class="row"><b>Ý chính:</b> khí hậu ấm/ẩm hơn ~11,700 năm trước khiến rừng rậm hơn</div>
+        <div class="row"><b>Bổ trợ:</b> nhóm nghiên cứu cho rằng KHÔNG NGẪU NHIÊN mà rìu đá (thay vì vỏ sò) xuất hiện đúng lúc này — có liên hệ giữa khí hậu và vật liệu làm rìu, nhưng đoạn KHÔNG so sánh Obi với đảo khác</div>
+        <div class="row">→ Câu 4: <span class="ans-line">NOT GIVEN</span> &nbsp; → Câu 5: <span class="ans-line">TRUE</span> &nbsp; → Câu 9: <span class="ans-line">stone</span></div>
+      </div></div>
+    </div>
+
+    <!-- Đoạn 6 -->
+    <div class="para-block">
+      <div class="para-label">ĐOẠN 6 <button class="note-btn" onclick="toggleNote(this,'s19t3p1n6')">Ghi chú</button></div>
+      <p class="para-text"><span class="hl hl-topic">Judging by the <span class="hl-clue">bones</span> which the researchers unearthed in the Kelo caves, people living there mainly hunted the Rothschild's cuscus, a possum-like creature that still lives on Obi today.</span> As the forest grew more dense, people probably used axes to clear patches of forest and make hunting easier.</p>
+      <div class="margin-note" id="s19t3p1n6"><div class="margin-note-inner">
+        <div class="row"><b>Ý chính:</b> qua xương động vật tìm được, người xưa chủ yếu săn thú có túi giống chồn (cuscus)</div>
+        <div class="row">Đoạn chỉ mô tả bằng chứng săn bắt, KHÔNG hề nhắc đến việc nhóm nghiên cứu ngạc nhiên</div>
+        <div class="row">→ Câu 6: <span class="ans-line">NOT GIVEN</span> &nbsp; → Câu 10: <span class="ans-line">bones</span></div>
+      </div></div>
+    </div>
+
+    <!-- Đoạn 7 -->
+    <div class="para-block">
+      <div class="para-label">ĐOẠN 7 <button class="note-btn" onclick="toggleNote(this,'s19t3p1n7')">Ghi chú</button></div>
+      <p class="para-text"><span class="hl hl-topic">Shipton's team's excavation of the shelters at the Kelo site unearthed a volcanic glass substance called obsidian, which must have been brought over from another island, as there is no known source on Obi.</span> <span class="hl hl-clue">It also revealed particular types of beads, similar to those previously found on islands in southern Wallacea.</span> These finds again support the idea that Obi islanders routinely travelled to other islands.</p>
+      <div class="margin-note" id="s19t3p1n7"><div class="margin-note-inner">
+        <div class="row"><b>Ý chính:</b> tìm thấy đá obsidian (vốn không có tự nhiên ở Obi) → chứng tỏ có giao thương/di chuyển giữa các đảo</div>
+        <div class="row"><b>Bổ trợ:</b> cũng tìm thấy hạt cườm giống loại đã tìm thấy ở các đảo phía nam Wallacea</div>
+        <div class="row">→ Câu 11: <span class="ans-line">beads</span></div>
+      </div></div>
+    </div>
+
+    <!-- Đoạn 8 -->
+    <div class="para-block">
+      <div class="para-label">ĐOẠN 8 <button class="note-btn" onclick="toggleNote(this,'s19t3p1n8')">Ghi chú</button></div>
+      <p class="para-text"><span class="hl hl-topic">The excavations suggest people successfully lived in the two Kelo shelters for about 10,000 years.</span> <span class="hl hl-clue">But then, about 8,000 years ago, both were abandoned.</span> Did the residents leave Obi completely, or move elsewhere on the island? Perhaps the jungle had grown so thick that axes were no longer a match for the dense undergrowth. Perhaps people simply moved to the coast and turned to fishing rather than hunting as a means of survival.</p>
+      <div class="margin-note" id="s19t3p1n8"><div class="margin-note-inner">
+        <div class="row"><b>Ý chính:</b> người dân sống ở 2 hang Kelo khoảng 10,000 năm rồi bỏ đi khoảng 8,000 năm trước</div>
+        <div class="row"><b>Bổ trợ:</b> có thể do rừng quá rậm, hoặc chuyển ra bờ biển đánh cá thay vì săn bắt</div>
+        <div class="row">Đoạn này chuẩn bị bối cảnh cho Câu 7 — tiếp tục ở đoạn 9</div>
+      </div></div>
+    </div>
+
+    <!-- Đoạn 9 -->
+    <div class="para-block">
+      <div class="para-label">ĐOẠN 9 <button class="note-btn" onclick="toggleNote(this,'s19t3p1n9')">Ghi chú</button></div>
+      <p class="para-text"><span class="hl hl-topic">Whatever the reason for the departure, there is no evidence for use of the Kelo shelters after this time, until about 1,000 years ago, when they were re-occupied by people who owned <span class="hl-clue">pottery</span> as well as items made out of gold and silver.</span> It seems likely, in view of Obi's location, that this final phase of occupation also saw the Kelo shelters used by people involved in the historic trade in <span class="hl hl-clue">spices</span> between the Maluku islands and the rest of the world.</p>
+      <div class="margin-note" id="s19t3p1n9"><div class="margin-note-inner">
+        <div class="row"><b>Ý chính:</b> hang Kelo bị bỏ trống cho đến khoảng 1,000 năm trước mới có người ở lại, sở hữu đồ gốm và đồ vàng/bạc</div>
+        <div class="row"><b>Bổ trợ:</b> giai đoạn cuối này có thể liên quan đến buôn bán gia vị giữa quần đảo Maluku và thế giới</div>
+        <div class="row">→ Câu 7: <span class="ans-line">FALSE</span> (có khoảng trống ~7,000 năm không có người ở, không liên tục) &nbsp; → Câu 12: <span class="ans-line">pottery</span> &nbsp; → Câu 13: <span class="ans-line">spices</span></div>
+      </div></div>
+    </div>
+
+  </div>
+
+  <!-- ================= QUESTIONS ================= -->
+  <div class="q-panel">
+    <h2>Questions 1–7</h2>
+    <p class="q-instructions">Do the following statements agree with the information given in the passage? Write TRUE / FALSE / NOT GIVEN.</p>
+
+    <div class="q-item" id="q1" data-note="s19t3p1n1" data-correct="FALSE">
+      <div><span class="q-num">1</span><span class="q-text">Archaeological research had taken place on the island of Obi before the arrival of Ceri Shipton and his colleagues.</span></div>
+      <div class="q-controls tfng" data-qid="1">
+        <label><input type="radio" name="q1" value="TRUE"><span>TRUE</span></label>
+        <label><input type="radio" name="q1" value="FALSE"><span>FALSE</span></label>
+        <label><input type="radio" name="q1" value="NOT GIVEN"><span>NOT GIVEN</span></label>
+      </div>
+      <button class="explain-toggle" onclick="toggleExplain(this)">Vì sao?</button>
+      <div class="explain">Đoạn 1: Shipton và nhóm "<b>became the first archaeologists</b> to explore Obi" — chưa từng có ai nghiên cứu khảo cổ ở đây trước đó.</div>
+      <div class="verdict"></div>
+    </div>
+
+    <div class="q-item" id="q2" data-note="s19t3p1n3" data-correct="FALSE">
+      <div><span class="q-num">2</span><span class="q-text">At the Kelo sites, the researchers found the first clam shell axes ever to be discovered in the region.</span></div>
+      <div class="q-controls tfng" data-qid="2">
+        <label><input type="radio" name="q2" value="TRUE"><span>TRUE</span></label>
+        <label><input type="radio" name="q2" value="FALSE"><span>FALSE</span></label>
+        <label><input type="radio" name="q2" value="NOT GIVEN"><span>NOT GIVEN</span></label>
+      </div>
+      <button class="explain-toggle" onclick="toggleExplain(this)">Vì sao?</button>
+      <div class="explain">Đoạn 3: rìu vỏ sò cùng thời kỳ "had also previously been <b>found elsewhere in this region</b>, including... Gebe" — không phải lần đầu tiên trong khu vực.</div>
+      <div class="verdict"></div>
+    </div>
+
+    <div class="q-item" id="q3" data-note="s19t3p1n4" data-correct="TRUE">
+      <div><span class="q-num">3</span><span class="q-text">The size of Obi today is less than it was 18,000 years ago.</span></div>
+      <div class="q-controls tfng" data-qid="3">
+        <label><input type="radio" name="q3" value="TRUE"><span>TRUE</span></label>
+        <label><input type="radio" name="q3" value="FALSE"><span>FALSE</span></label>
+        <label><input type="radio" name="q3" value="NOT GIVEN"><span>NOT GIVEN</span></label>
+      </div>
+      <button class="explain-toggle" onclick="toggleExplain(this)">Vì sao?</button>
+      <div class="explain">Đoạn 4: mực nước biển thấp hơn 120m khiến Obi khi đó <b>lớn hơn nhiều</b>, gồm cả đảo Bisa ngày nay → Obi hiện tại nhỏ hơn.</div>
+      <div class="verdict"></div>
+    </div>
+
+    <div class="q-item" id="q4" data-note="s19t3p1n5" data-correct="NOT GIVEN">
+      <div><span class="q-num">4</span><span class="q-text">A change in the climate around 11,700 years ago had a greater impact on Obi than on the surrounding islands.</span></div>
+      <div class="q-controls tfng" data-qid="4">
+        <label><input type="radio" name="q4" value="TRUE"><span>TRUE</span></label>
+        <label><input type="radio" name="q4" value="FALSE"><span>FALSE</span></label>
+        <label><input type="radio" name="q4" value="NOT GIVEN"><span>NOT GIVEN</span></label>
+      </div>
+      <button class="explain-toggle" onclick="toggleExplain(this)">Vì sao?</button>
+      <div class="explain">Đoạn 5 chỉ nói về tác động khí hậu lên Obi, <b>không so sánh</b> với các đảo xung quanh.</div>
+      <div class="verdict"></div>
+    </div>
+
+    <div class="q-item" id="q5" data-note="s19t3p1n5" data-correct="TRUE">
+      <div><span class="q-num">5</span><span class="q-text">The researchers believe there is a connection between warmer, wetter weather and a change in the material used to make axes.</span></div>
+      <div class="q-controls tfng" data-qid="5">
+        <label><input type="radio" name="q5" value="TRUE"><span>TRUE</span></label>
+        <label><input type="radio" name="q5" value="FALSE"><span>FALSE</span></label>
+        <label><input type="radio" name="q5" value="NOT GIVEN"><span>NOT GIVEN</span></label>
+      </div>
+      <button class="explain-toggle" onclick="toggleExplain(this)">Vì sao?</button>
+      <div class="explain">Đoạn 5: "it is <b>no coincidence</b> that around this time the first axes crafted from stone... appear" — nhóm nghiên cứu tin có liên hệ.</div>
+      <div class="verdict"></div>
+    </div>
+
+    <div class="q-item" id="q6" data-note="s19t3p1n6" data-correct="NOT GIVEN">
+      <div><span class="q-num">6</span><span class="q-text">Shipton's team were surprised to find evidence of the Obi islanders' hunting practices.</span></div>
+      <div class="q-controls tfng" data-qid="6">
+        <label><input type="radio" name="q6" value="TRUE"><span>TRUE</span></label>
+        <label><input type="radio" name="q6" value="FALSE"><span>FALSE</span></label>
+        <label><input type="radio" name="q6" value="NOT GIVEN"><span>NOT GIVEN</span></label>
+      </div>
+      <button class="explain-toggle" onclick="toggleExplain(this)">Vì sao?</button>
+      <div class="explain">Đoạn 6 chỉ mô tả bằng chứng săn bắt, <b>không hề nhắc</b> đến việc nhóm nghiên cứu ngạc nhiên.</div>
+      <div class="verdict"></div>
+    </div>
+
+    <div class="q-item" id="q7" data-note="s19t3p1n9" data-correct="FALSE">
+      <div><span class="q-num">7</span><span class="q-text">It is thought that the Kelo shelters were occupied continuously until about 1,000 years ago.</span></div>
+      <div class="q-controls tfng" data-qid="7">
+        <label><input type="radio" name="q7" value="TRUE"><span>TRUE</span></label>
+        <label><input type="radio" name="q7" value="FALSE"><span>FALSE</span></label>
+        <label><input type="radio" name="q7" value="NOT GIVEN"><span>NOT GIVEN</span></label>
+      </div>
+      <button class="explain-toggle" onclick="toggleExplain(this)">Vì sao?</button>
+      <div class="explain">Đoạn 8-9: hang bị bỏ hoang khoảng 8,000 năm trước, <b>không có bằng chứng sử dụng</b> cho đến khi được ở lại khoảng 1,000 năm trước — có khoảng trống, không liên tục.</div>
+      <div class="verdict"></div>
+    </div>
+
+    <div class="q-group-title">Questions 8–13 · Note completion</div>
+    <p class="q-instructions">Choose ONE WORD ONLY from the passage for each answer.</p>
+
+    <div class="q-item" id="q8" data-note="s19t3p1n3" data-correct="caves">
+      <div><span class="q-num">8</span><span class="q-text">The rock shelters that were excavated near the village of Kelo were located inside ___</span></div>
+      <div class="q-controls"><input class="blank-input" type="text" placeholder="điền câu trả lời..."></div>
+      <button class="explain-toggle" onclick="toggleExplain(this)">Vì sao?</button>
+      <div class="explain">Đoạn 3: "...found two <b>caves</b> containing prehistoric rock shelters..."</div>
+      <div class="verdict"></div>
+    </div>
+
+    <div class="q-item" id="q9" data-note="s19t3p1n5" data-correct="stone">
+      <div><span class="q-num">9</span><span class="q-text">Axes made from ___ started to appear at the Kelo site around 11,700 years ago.</span></div>
+      <div class="q-controls"><input class="blank-input" type="text" placeholder="điền câu trả lời..."></div>
+      <button class="explain-toggle" onclick="toggleExplain(this)">Vì sao?</button>
+      <div class="explain">Đoạn 5: "...the first axes crafted from <b>stone</b> rather than sea shells appear..."</div>
+      <div class="verdict"></div>
+    </div>
+
+    <div class="q-item" id="q10" data-note="s19t3p1n6" data-correct="bones">
+      <div><span class="q-num">10</span><span class="q-text">___ found at the Kelo site provided evidence of the animals that ancient islanders ate.</span></div>
+      <div class="q-controls"><input class="blank-input" type="text" placeholder="điền câu trả lời..."></div>
+      <button class="explain-toggle" onclick="toggleExplain(this)">Vì sao?</button>
+      <div class="explain">Đoạn 6: "Judging by the <b>bones</b> which the researchers unearthed in the Kelo caves..."</div>
+      <div class="verdict"></div>
+    </div>
+
+    <div class="q-item" id="q11" data-note="s19t3p1n7" data-correct="beads">
+      <div><span class="q-num">11</span><span class="q-text">The excavation also revealed ___ which resembled ones found on other islands, providing evidence of travel between islands.</span></div>
+      <div class="q-controls"><input class="blank-input" type="text" placeholder="điền câu trả lời..."></div>
+      <button class="explain-toggle" onclick="toggleExplain(this)">Vì sao?</button>
+      <div class="explain">Đoạn 7: "It also revealed particular types of <b>beads</b>, similar to those previously found on islands in southern Wallacea."</div>
+      <div class="verdict"></div>
+    </div>
+
+    <div class="q-item" id="q12" data-note="s19t3p1n9" data-correct="pottery">
+      <div><span class="q-num">12</span><span class="q-text">When the Kelo shelters were re-occupied around 1,000 years ago, the people living there owned ___ as well as items made out of metal.</span></div>
+      <div class="q-controls"><input class="blank-input" type="text" placeholder="điền câu trả lời..."></div>
+      <button class="explain-toggle" onclick="toggleExplain(this)">Vì sao?</button>
+      <div class="explain">Đoạn 9: "...re-occupied by people who owned <b>pottery</b> as well as items made out of gold and silver."</div>
+      <div class="verdict"></div>
+    </div>
+
+    <div class="q-item" id="q13" data-note="s19t3p1n9" data-correct="spices">
+      <div><span class="q-num">13</span><span class="q-text">The people who re-occupied the Kelo shelters probably took part in the production and sale of ___</span></div>
+      <div class="q-controls"><input class="blank-input" type="text" placeholder="điền câu trả lời..."></div>
+      <button class="explain-toggle" onclick="toggleExplain(this)">Vì sao?</button>
+      <div class="explain">Đoạn 9: "...used by people involved in the historic trade in <b>spices</b> between the Maluku islands and the rest of the world."</div>
+      <div class="verdict"></div>
+    </div>
+
+    <div class="submit-bar">
+      <button class="submit-btn" id="submitBtn19" onclick="gradeAll19()">NỘP BÀI</button>
+      <div class="score-line" id="scoreLine19"></div>
+    </div>
+  </div>
+
+</div>
+
+</div>
+
+
 </div>
 
 <script>
@@ -9474,6 +9773,88 @@ function gradeAll18(force){
     completed18 = true;
     handleSubmission('p-set19-test2-passage3', 'p-set19-test2-passage3', correctCount, items.length);
     const tab = document.getElementById('explainTab18');
+    tab.classList.remove('locked');
+    tab.innerHTML = '📖 Coi giải thích';
+  }
+}
+
+// ===================== SET 19 · TEST 3 · PASSAGE 1 (Archaeologists discover evidence of prehistoric island settlers) =====================
+
+let completed19 = false;
+
+function setMode19(mode){
+  if(mode === 'explain' && !completed19){
+    alert('Bạn cần trả lời hết 13 câu và bấm "NỘP BÀI" ở chế độ Làm bài trước khi xem giải thích.');
+    return;
+  }
+  document.body.classList.remove('mode-exam','mode-explain');
+  document.body.classList.add('mode-' + mode);
+  document.querySelectorAll('#p-set19-test3-passage1 .mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+  document.getElementById('submitBtn19').textContent = (mode === 'exam') ? 'NỘP BÀI' : 'CHẤM LẠI ĐÁP ÁN';
+  logEvent('mode_switch', 'p-set19-test3-passage1', {mode});
+  if(mode === 'explain') logEvent('explanation_viewed', 'p-set19-test3-passage1');
+}
+
+function toggleHL19(){
+  document.body.classList.toggle('notes-on');
+  const on = document.body.classList.contains('notes-on');
+  document.getElementById('hlSwitch19').classList.toggle('on', on);
+  if(!on){
+    document.querySelectorAll('#p-set19-test3-passage1 .margin-note.open').forEach(n => n.classList.remove('open'));
+    document.querySelectorAll('#p-set19-test3-passage1 .note-btn.active').forEach(b => b.classList.remove('active'));
+  }
+}
+
+function gradeAll19(force){
+  const inExam = document.body.classList.contains('mode-exam');
+  const items = document.querySelectorAll('#p-set19-test3-passage1 .q-item');
+
+  if(inExam && !force){
+    let ok = true;
+    items.forEach(item=>{
+      const radios = item.querySelectorAll('input[type=radio]');
+      const text = item.querySelector('input[type=text]');
+      if(radios.length && !item.querySelector('input[type=radio]:checked')) ok = false;
+      if(text && text.value.trim() === '') ok = false;
+    });
+    if(!ok){
+      alert('Bạn cần trả lời hết 13 câu trước khi nộp bài.');
+      return;
+    }
+  }
+  if(inExam && !force){
+    const notesCheck = checkRequiredNotesFilled('p-set19-test3-passage1');
+    if(!notesCheck.ok){ alertMissingRequiredNotes(notesCheck); return; }
+  }
+
+  let correctCount = 0;
+  items.forEach(item=>{
+    const correct = item.dataset.correct;
+    let given = null;
+    const radio = item.querySelector('input[type=radio]:checked');
+    const text = item.querySelector('input[type=text]');
+    if(radio) given = radio.value;
+    else if(text) given = text.value.trim();
+
+    item.classList.remove('correct','incorrect');
+    const verdict = item.querySelector('.verdict');
+    if(given && given.toLowerCase() === correct.toLowerCase()){
+      item.classList.add('correct');
+      verdict.textContent = '✓ Đúng';
+      verdict.className = 'verdict ok';
+      correctCount++;
+    } else {
+      item.classList.add('incorrect');
+      verdict.textContent = '✗ Đáp án đúng: ' + correct;
+      verdict.className = 'verdict bad';
+    }
+  });
+  document.getElementById('scoreLine19').textContent = `Kết quả: ${correctCount} / ${items.length} câu đúng`;
+
+  if(inExam){
+    completed19 = true;
+    handleSubmission('p-set19-test3-passage1', 'p-set19-test3-passage1', correctCount, items.length);
+    const tab = document.getElementById('explainTab19');
     tab.classList.remove('locked');
     tab.innerHTML = '📖 Coi giải thích';
   }
